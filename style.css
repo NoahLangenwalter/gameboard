@@ -12,6 +12,7 @@ body {
 }
 
 #info {
+    display:block;
     color: black;
     position: fixed;
     top: 15px;

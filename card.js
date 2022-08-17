@@ -2,7 +2,7 @@ import { GameObject } from "./gameObject.js";
 import { AnimationData } from "./animationData.js";
 
 export class Card extends GameObject {
-    isFaceUp = false;
+    isFaceUp = true;
     inDeck = true;
     drawing = false;
 
@@ -60,38 +60,39 @@ export class Card extends GameObject {
         }
     }
 
-    // draw(context) {
-    //     let cR = this.cornerRadius;
-    //     context.fillStyle = this.isFaceUp ? "white" : "#333333";//"#4a6f71";
-    //     context.strokeStyle = "#333333";//"#4a6f71";
-    //     // context.fillRect(this.x, this.y, this.width, this.height);
-    //     context.lineJoin = "round";
-    //     context.lineWidth = cR;
-    //     context.strokeRect(this.posX+(cR/2), this.posY+(cR/2), this.width-cR, this.height-cR);
-    //     context.fillRect(this.posX+(cR/2), this.posY+(cR/2), this.width-cR, this.height-cR);
-    //     context.strokeStyle = "white";
-    //     context.lineWidth = 8;
-    //     context.strokeRect(this.posX+15, this.posY+15, this.width-30, this.height-30);
+    draw(context) {
+        this.game.view.apply();
         
-    //     if (this.isFaceUp) {
-    //         context.fillStyle = "black";
-    //         context.font = "100px Arial";
-    //         context.textBaseline = "middle"; 
-    //         context.textAlign = "center";
-    //         context.fillText(this.number, this.posX+this.width/2, this.posY+this.height/2);
-    //     }
-    //     else {
-    //         context.beginPath();
-    //         context.moveTo(this.posX+15,this.posY+15);
-    //         context.lineTo(this.posX+this.width-15,this.posY+this.height-15);
-    //         context.stroke();
+        let cR = this.cornerRadius;
+        context.fillStyle = this.isFaceUp ? "white" : this.game.colors.dark;
+        context.strokeStyle = this.game.colors.dark;
+        context.lineJoin = "round";
+        context.lineWidth = cR;
+        context.strokeRect(this.posX+(cR/2), this.posY+(cR/2), this.width-cR, this.height-cR);
+        context.fillRect(this.posX+(cR/2), this.posY+(cR/2), this.width-cR, this.height-cR);
+        context.strokeStyle = this.isFaceUp ? "white" : this.game.colors.light;
+        context.lineWidth = 8;
+        context.strokeRect(this.posX+15, this.posY+15, this.width-30, this.height-30);
+        
+        if (this.isFaceUp) {
+            context.fillStyle = "black";
+            context.font = "100px Arial";
+            context.textBaseline = "middle"; 
+            context.textAlign = "center";
+            context.fillText(this.number, this.posX+this.width/2, this.posY+this.height/2);
+        }
+        else {
+            context.beginPath();
+            context.moveTo(this.posX+15,this.posY+15);
+            context.lineTo(this.posX+this.width-15,this.posY+this.height-15);
+            context.stroke();
     
-    //         context.beginPath();
-    //         context.moveTo(this.posX+15,this.posY+this.height-15);
-    //         context.lineTo(this.posX+this.width-15,this.posY+15);
-    //         context.stroke();
-    //     }
-    // }
+            context.beginPath();
+            context.moveTo(this.posX+15,this.posY+this.height-15);
+            context.lineTo(this.posX+this.width-15,this.posY+15);
+            context.stroke();
+        }
+    }
 
     play = () => {
         this.inDeck = false;

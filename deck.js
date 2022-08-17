@@ -15,51 +15,50 @@ export class Deck extends GameObject {
         this.icon = document.getElementById("deckIcon");
     }
 
-    get bottom() {return this.y + this.height }
-    get right() {return this.x + this.width }
+    draw(context) {
+        this.game.view.apply();
 
-    // draw(context) {
-    //     if (this.empty) {
-    //         let cR = this.cornerRadius;
-    //         context.fillStyle = "#aaaaaa";//"#4a6f71";
-    //         context.strokeStyle = "#aaaaaa";//"#4a6f71";
-    //         // context.fillRect(this.x, this.y, this.width, this.height);
-    //         context.lineJoin = "round";
-    //         context.lineWidth = cR;
-    //         context.strokeRect(this.x+(cR/2), this.y+(cR/2), this.width-cR, this.height-cR);
-    //         context.fillRect(this.x+(cR/2), this.y+(cR/2), this.width-cR, this.height-cR);
-    //         context.strokeStyle = "#333333";
-    //         context.lineWidth = 15;
+        if (this.empty) {
+            let cR = this.cornerRadius;
+            context.fillStyle = this.game.colors.medium;//"#4a6f71";
+            context.strokeStyle = this.game.colors.medium;//"#4a6f71";
+            // context.fillRect(this.x, this.y, this.width, this.height);
+            context.lineJoin = "round";
+            context.lineWidth = cR;
+            context.strokeRect(this.x+(cR/2), this.y+(cR/2), this.width-cR, this.height-cR);
+            context.fillRect(this.x+(cR/2), this.y+(cR/2), this.width-cR, this.height-cR);
+            context.strokeStyle = "black";
+            context.lineWidth = 15;
             
-    //         context.beginPath();
-    //         context.moveTo(this.x+60,this.y+120);
-    //         context.lineTo(this.x+this.width-60,this.y+this.height-120);
-    //         context.stroke();
+            context.beginPath();
+            context.moveTo(this.x+60,this.y+120);
+            context.lineTo(this.x+this.width-60,this.y+this.height-120);
+            context.stroke();
 
-    //         context.beginPath();
-    //         context.moveTo(this.x+60,this.y+this.height-120);
-    //         context.lineTo(this.x+this.width-60,this.y+120);
-    //         context.stroke();
-    //     }
-    //     else {
-    //         this.cards[0].draw(context);
-    //     }
+            context.beginPath();
+            context.moveTo(this.x+60,this.y+this.height-120);
+            context.lineTo(this.x+this.width-60,this.y+120);
+            context.stroke();
+        }
+        else {
+            this.cards[0].draw(context);
+        }
         
-    //     // deck icon overlay
-    //     let radius = 20/this.game.view.scale;
-    //     let centerX = this.right - radius/2;
-    //     let centerY = this.bottom - radius/2;
-    //     context.beginPath();
-    //     context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-    //     context.fillStyle = 'white';
-    //     context.fill();
-    //     context.lineWidth = 5/this.game.view.scale;
-    //     context.strokeStyle = "black";
-    //     context.stroke();
+        // deck icon overlay
+        this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        let radius = 20;
+        const center = this.game.view.applyTransformTo(this.right - radius/2, this.bottom - radius/2);
+        context.beginPath();
+        context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+        context.fillStyle = 'white';
+        context.fill();
+        context.lineWidth = 5
+        context.strokeStyle = "black";
+        context.stroke();
 
-    //     let iconSize = radius*1.25;
-    //     context.drawImage(this.icon, centerX-iconSize/2, centerY-iconSize/2, iconSize, iconSize);
-    // }
+        let iconSize = radius*1.25;
+        context.drawImage(this.icon, center.x-iconSize/2, center.y-iconSize/2, iconSize, iconSize);
+    }
 
     activate() {
         this.drawCard();
@@ -107,8 +106,6 @@ export class Deck extends GameObject {
         this.shuffle();
 
         this.empty = numberOfCards === 0;
-
-        // this.element.classList.remove("empty");
     }
 
     handleDrawn = () => {

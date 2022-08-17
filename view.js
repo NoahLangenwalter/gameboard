@@ -1,52 +1,53 @@
 export class View {
+    #scale = 1;
+    #offset = { x: 0, y: 0 };
+    maxZoom = 2;
+    minZoom = 0.1;
+
     constructor(context) {
-        this.ctx = context;                 // reference to the 2D context
-        // this.matrix = [1, 0, 0, 1, 0, 0];   // current view transform
-        this._scale = 1;                    // current scale
-        this.pos = { x: 0, y: 0 };          // current position of origin
-        this.maxZoom = 2;
-        this.minZoom = 0.1;
+        this.ctx = context;
     }
 
-    get scale() { return this._scale };
-    get position() { return this.pos };
+    get scale() { return this.#scale };
+    get offset() { return this.#offset };
 
     apply() {
-        // let m = this.matrix;
-        // this.update();
-        this.ctx.setTransform(this.scale, 0, 0, this.scale, this.pos.x, this.pos.y)
-        // this.ctx.setTransform(m[0], m[1], m[2], m[3], m[4], m[5]);
-    }
-
-    isDirty() { return this.dirty }
-
-    update() {
-        let m = this.matrix;
-        m[3] = m[0] = this._scale;
-        m[2] = m[1] = 0;
-        m[4] = this.pos.x;
-        m[5] = this.pos.y;
+        this.ctx.setTransform(this.scale, 0, 0, this.scale, this.#offset.x, this.#offset.y)
     }
 
     pan(amount) {
         // this.update();
-        this.pos.x += amount.x;
-        this.pos.y += amount.y;
+        this.#offset.x += amount.x;
+        this.#offset.y += amount.y;
     }
 
     scaleAt(at, amount) { // at in screen coords
         // this.update();
-        this._scale *= amount;
-        this._scale = Math.min(Math.max(this._scale, this.minZoom), this.maxZoom);
-        this.pos.x = at.x - (at.x - this.pos.x) * amount;
-        this.pos.y = at.y - (at.y - this.pos.y) * amount;
+        this.#scale *= amount;
+        this.#scale = Math.min(Math.max(this.#scale, this.minZoom), this.maxZoom);
+        this.#offset.x = at.x - (at.x - this.#offset.x) * amount;
+        this.#offset.y = at.y - (at.y - this.#offset.y) * amount;
+    }
+
+    toScreen(x, y) {
+        const point = {};
+        point.x = x * this.#scale + this.offset.x;
+        point.y = y * this.#scale + this.offset.y;
+        return point;
     }
 
     toWorld(x, y) {   // converts from screen coords to world coords
         const point = {};
-        const inv = 1 / this.scale;
-        point.x = (x - this.pos.x) * inv;
-        point.y = (y - this.pos.y) * inv;
+        const inv = 1 / this.#scale;
+        point.x = (x - this.#offset.x) * inv;
+        point.y = (y - this.#offset.y) * inv;
+        return point;
+    }
+
+    applyTransformTo(x, y) {
+        const point = {};
+        point.x = (x + this.offset.x/this.#scale) * this.#scale;
+        point.y = (y + this.offset.y/this.#scale) * this.#scale;
         return point;
     }
 }
