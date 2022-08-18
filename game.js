@@ -2,7 +2,8 @@ import { View } from "./view.js";
 
 export class Game {
     gridScale = 100;
-    colors = {dark: "#005782", medium: "#569abc", light: "#cee9f7"}
+    colors = {dark: "#005782", medium: "#569abc", light: "#CED8F7", highlight: "#00ffff"};
+    nextZ = 0;
 
     constructor(canvas, ctx) {
         this.canvas = canvas;
@@ -12,14 +13,21 @@ export class Game {
         this.objects = [];
         this.view = new View(ctx);
     }
+
     update() {
+        this.objects.sort((a,b)=> {
+            return a.z > b.z ? 1 : -1;
+        });
+
         for (let i = 0; i < this.objects.length; i++) {
+            this.objects[i].z = i;
             this.objects[i].update();
         }
 
         // info.textContent = "Scale: " + this.view.scale.toFixed(4) + " (1px = " + (1 / this.view.scale).toFixed(4) + " world px) - ";
         // info.textContent += "Offset: " + this.view.offset.x.toFixed(2) + "," + this.view.offset.x.toFixed(2) + " - ";
     }
+    
     draw() {
         this.drawGrid();
 
@@ -27,8 +35,17 @@ export class Game {
             this.objects[i].draw(this.ctx);
         }
     }
-    addObject(object) {
+    
+    addObject(object, z = -1) {
+        if (z < 0) {
+            object.z = this.nextZ;
+            this.nextZ++;
+        }
         this.objects.push(object);
+    }
+    
+    removeObject(object) {
+        this.objects.splice(this.objects.indexOf(object), 1);
     }
 
     drawGrid() {

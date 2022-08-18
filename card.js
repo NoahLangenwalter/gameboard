@@ -2,14 +2,14 @@ import { GameObject } from "./gameObject.js";
 import { AnimationData } from "./animationData.js";
 
 export class Card extends GameObject {
-    isFaceUp = true;
+    isFaceUp = false;
     inDeck = true;
     drawing = false;
 
     flipping = false;
     playing = false;
     constructor(game, deck, number, drawnHandler, startX = 0, startY = 0, startZ = 0) {
-        super(game, startX, startY, startZ);
+        super(game, number, startX, startY, startZ);
 
         this.deck = deck;
         this.x = deck.x;
@@ -21,13 +21,13 @@ export class Card extends GameObject {
         this.drawnHandler = drawnHandler;
 
         this.animations = {
-            flipping: new AnimationData(100), 
+            flipping: new AnimationData(100),
             playing: new AnimationData(500),
         }
     }
 
-    get posX() {return this.inDeck ? this.deck.x : this.x}
-    get posY() {return this.inDeck ? this.deck.y : this.y}
+    get posX() { return this.inDeck ? this.deck.x : this.x }
+    get posY() { return this.inDeck ? this.deck.y : this.y }
 
     update() {
         if (this.animations.playing.status) {
@@ -40,7 +40,7 @@ export class Card extends GameObject {
 
                 console.log("done playing!");
                 this.isFaceUp = true;
-                
+
                 this.drawnHandler();
             }
             else {
@@ -49,7 +49,7 @@ export class Card extends GameObject {
                 this.y = anim.startValues[1] + plusY;
             }
         }
-        if(this.animations.flipping.status) {
+        if (this.animations.flipping.status) {
             let anim = this.animations.flipping;
             anim.update();
 
@@ -62,34 +62,43 @@ export class Card extends GameObject {
 
     draw(context) {
         this.game.view.apply();
-        
+
+        if (this.hovering) {
+            const hR = 24;
+            context.strokeStyle = this.game.colors.highlight;
+            context.lineWidth = hR;
+            context.globalAlpha = 0.5;
+            context.strokeRect(this.posX + hR/4, this.posY + hR/4, this.width - hR/2, this.height - hR/2);
+            context.globalAlpha = 1;
+        }
+
         let cR = this.cornerRadius;
         context.fillStyle = this.isFaceUp ? "white" : this.game.colors.dark;
         context.strokeStyle = this.game.colors.dark;
         context.lineJoin = "round";
         context.lineWidth = cR;
-        context.strokeRect(this.posX+(cR/2), this.posY+(cR/2), this.width-cR, this.height-cR);
-        context.fillRect(this.posX+(cR/2), this.posY+(cR/2), this.width-cR, this.height-cR);
+        context.strokeRect(this.posX + (cR / 2), this.posY + (cR / 2), this.width - cR, this.height - cR);
+        context.fillRect(this.posX + (cR / 2), this.posY + (cR / 2), this.width - cR, this.height - cR);
         context.strokeStyle = this.isFaceUp ? "white" : this.game.colors.light;
         context.lineWidth = 8;
-        context.strokeRect(this.posX+15, this.posY+15, this.width-30, this.height-30);
-        
+        context.strokeRect(this.posX + 15, this.posY + 15, this.width - 30, this.height - 30);
+
         if (this.isFaceUp) {
             context.fillStyle = "black";
             context.font = "100px Arial";
-            context.textBaseline = "middle"; 
+            context.textBaseline = "middle";
             context.textAlign = "center";
-            context.fillText(this.number, this.posX+this.width/2, this.posY+this.height/2);
+            context.fillText(this.number, this.posX + this.width / 2, this.posY + this.height / 2);
         }
         else {
             context.beginPath();
-            context.moveTo(this.posX+15,this.posY+15);
-            context.lineTo(this.posX+this.width-15,this.posY+this.height-15);
+            context.moveTo(this.posX + 15, this.posY + 15);
+            context.lineTo(this.posX + this.width - 15, this.posY + this.height - 15);
             context.stroke();
-    
+
             context.beginPath();
-            context.moveTo(this.posX+15,this.posY+this.height-15);
-            context.lineTo(this.posX+this.width-15,this.posY+15);
+            context.moveTo(this.posX + 15, this.posY + this.height - 15);
+            context.lineTo(this.posX + this.width - 15, this.posY + 15);
             context.stroke();
         }
     }
@@ -98,7 +107,17 @@ export class Card extends GameObject {
         this.inDeck = false;
         this.x = this.deck.x;
         this.y = this.deck.y;
-        this.animations.playing.start([this.x, this.y], [this.x,  this.y + 30 + this.height]);
+        this.z = 1000;
+        this.animations.playing.start([this.x, this.y], [this.x, this.y + 30 + this.height]);
+    }
+
+    returntoDeck = (deck) => {
+        this.inDeck = true;
+        this.deck = deck;
+        this.x = this.deck.x;
+        this.y = this.deck.y;
+        this.isFaceUp = !this.deck.isDrawPile;
+        //TODO: should this animate? the flipping and moving to the deck's position?
     }
 
     activate() {

@@ -2,9 +2,14 @@ export class GameObject {
     width = 100;
     height = 100;
     cornerRadius = 20;
+    dragging = false;
+    hovering = false;
+    selected = false;
+    isCardTarget = false;
     
-    constructor(game, startX = 0, startY = 0, startZ = 0) {
+    constructor(game, id, startX = 0, startY = 0, startZ = -1) {
         this.game = game;
+        this.id = id;
         this.x = startX;
         this.y = startY;
         this.z = startZ;
@@ -17,12 +22,28 @@ export class GameObject {
         // console.log("Activated: " + this);
     }
 
-    pickUp(event) {
+    pickUp() {
         this.dragging = true;
     }
 
     putDown() {
         this.dragging = false;
+    }
+
+    hoverEnter() {
+        this.hovering = true;
+    }
+
+    hoverLeave() {
+        this.hovering = false;
+    }
+
+    select() {
+        this.selected = true;
+    }
+
+    unselect() {
+        this.selected = false;
     }
 
     moveTo(x, y) {

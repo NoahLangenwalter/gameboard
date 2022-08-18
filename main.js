@@ -18,6 +18,8 @@ window.onload = function () {
         ctx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
 
         game.update();
+
+        mouse.update();
         // info.textContent += "Mouse: " + mouse.x.toFixed(2) + "," + mouse.y.toFixed(2) + " - ";
 
         game.draw();

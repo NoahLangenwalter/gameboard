@@ -3,9 +3,11 @@ import { GameObject } from './gameObject.js';
 
 export class Deck extends GameObject {
     drawInProgress = false;
+    empty = true;
+    isDrawPile = true;
 
     constructor(game, numberOfCards, startX = 0, startY = 0, startZ = 0) {
-        super(game, startX, startY, startZ);
+        super(game, "deck", startX, startY, startZ);
 
         this.width = 250;
         this.height = 350;
@@ -13,10 +15,20 @@ export class Deck extends GameObject {
         this.build(numberOfCards);
 
         this.icon = document.getElementById("deckIcon");
+        this.isCardTarget = true;
     }
 
     draw(context) {
         this.game.view.apply();
+
+        if (this.hovering) {
+            const hR = 24;
+            context.strokeStyle = this.game.colors.highlight;
+            context.lineWidth = hR;
+            context.globalAlpha = 0.5;
+            context.strokeRect(this.x + hR/4, this.y + hR/4, this.width - hR/2, this.height - hR/2);
+            context.globalAlpha = 1;
+        }
 
         if (this.empty) {
             let cR = this.cornerRadius;
@@ -85,15 +97,24 @@ export class Deck extends GameObject {
         if (this.cards.length > 0) {
             let drawn = this.cards.shift();
 
-            drawn.play();
             this.game.addObject(drawn);
-    
+            drawn.play();
+
             this.drawInProgress = true;
         }
 
         if (this.cards.length === 0) {
             this.empty = true;
         }
+    }
+
+    returnCard = (card) => {
+        card.returntoDeck(this);
+        //adds to top;
+        this.cards.unshift(card);
+        this.game.removeObject(card);
+
+        this.empty = this.cards.length === 0;
     }
 
     build = (numberOfCards) => {
