@@ -4,33 +4,76 @@ import { GameObject } from './gameObject.js';
 export class Deck extends GameObject {
     drawInProgress = false;
     empty = true;
-    isDrawPile = true;
 
-    constructor(game, numberOfCards, startX = 0, startY = 0, startZ = 0) {
+    constructor(game, type, numberOfCards, startX = 0, startY = 0, startZ = 0) {
         super(game, "deck", startX, startY, startZ);
 
+        this.type = type;
         this.width = 250;
         this.height = 350;
         this.numberOfCards = numberOfCards;
         this.build(numberOfCards);
 
-        this.icon = document.getElementById("deckIcon");
+        const iconName = this.type === DeckType.DrawPile ? "deckIcon" : "discardIcon";
+        this.icon = document.getElementById(iconName);
         this.isCardTarget = true;
     }
 
     draw(context) {
-        this.game.view.apply();
-
         if (this.hovering) {
-            const hR = 24;
+            this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+            const hR = 20;
+            const anchor = this.game.view.applyTransformTo(this.x, this.y);
             context.strokeStyle = this.game.colors.highlight;
             context.lineWidth = hR;
             context.globalAlpha = 0.5;
-            context.strokeRect(this.x + hR/4, this.y + hR/4, this.width - hR/2, this.height - hR/2);
+            context.strokeRect(anchor.x, anchor.y + 1, this.width * this.game.view.scale, this.height * this.game.view.scale);
             context.globalAlpha = 1;
         }
 
+        this.game.view.apply();
+        if(this.dragging) {
+            let cR = this.cornerRadius*2;
+            context.shadowBlur = 40 * this.game.view.scale;
+            context.shadowOffsetX = 5 * this.game.view.scale;
+            context.shadowOffsetY = 10 * this.game.view.scale;
+            context.lineWidth = cR;
+            context.shadowColor = "black";
+            context.strokeRect(this.x + (cR / 2) + 5, this.y + (cR / 2) + 5, this.width - cR - 10, this.height - cR - 10);
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+        }
         if (this.empty) {
+            if (this.type === DeckType.DrawPile) {
+                this.drawAsDrawPile(context);
+            }
+            else {
+                this.drawAsDiscardPile(context);
+            }
+        }
+        else {
+            this.cards[0].draw(context);
+        }
+        
+        // deck icon overlay
+        this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        let radius = 21 - (.5/this.game.view.scale);
+        const center = this.game.view.applyTransformTo(this.right - radius, this.bottom - radius);
+        context.beginPath();
+        context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+        context.fillStyle = 'white';
+        context.fill();
+        context.lineWidth = 5 - (.2/this.game.view.scale)
+        context.strokeStyle = "black";
+        context.stroke();
+
+        let iconSize = radius*1.25;
+        context.drawImage(this.icon, center.x-iconSize/2, center.y-iconSize/2, iconSize, iconSize);
+        
+    }
+
+    drawAsDrawPile(context) {
             let cR = this.cornerRadius;
             context.fillStyle = this.game.colors.medium;//"#4a6f71";
             context.strokeStyle = this.game.colors.medium;//"#4a6f71";
@@ -39,37 +82,36 @@ export class Deck extends GameObject {
             context.lineWidth = cR;
             context.strokeRect(this.x+(cR/2), this.y+(cR/2), this.width-cR, this.height-cR);
             context.fillRect(this.x+(cR/2), this.y+(cR/2), this.width-cR, this.height-cR);
+            
             context.strokeStyle = "black";
             context.lineWidth = 15;
-            
             context.beginPath();
             context.moveTo(this.x+60,this.y+120);
             context.lineTo(this.x+this.width-60,this.y+this.height-120);
             context.stroke();
-
             context.beginPath();
             context.moveTo(this.x+60,this.y+this.height-120);
             context.lineTo(this.x+this.width-60,this.y+120);
             context.stroke();
-        }
-        else {
-            this.cards[0].draw(context);
-        }
-        
-        // deck icon overlay
-        this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
-        let radius = 20;
-        const center = this.game.view.applyTransformTo(this.right - radius/2, this.bottom - radius/2);
-        context.beginPath();
-        context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
-        context.fillStyle = 'white';
-        context.fill();
-        context.lineWidth = 5
-        context.strokeStyle = "black";
-        context.stroke();
+    }
 
-        let iconSize = radius*1.25;
-        context.drawImage(this.icon, center.x-iconSize/2, center.y-iconSize/2, iconSize, iconSize);
+    drawAsDiscardPile(context) {
+        let cR = this.cornerRadius;
+            context.fillStyle = this.game.colors.medium;//"#4a6f71";
+            context.strokeStyle = this.game.colors.medium;//"#4a6f71";
+            // context.fillRect(this.x, this.y, this.width, this.height);
+            context.lineJoin = "round";
+            context.lineWidth = cR;
+            context.strokeRect(this.x+(cR/2), this.y+(cR/2), this.width-cR, this.height-cR);
+            context.fillRect(this.x+(cR/2), this.y+(cR/2), this.width-cR, this.height-cR);
+            
+            context.strokeStyle = "black";
+            context.lineWidth = 15;
+            let radius = 60;
+            const center = {x: this.x + this.width / 2, y: this.y + this.height / 2};
+            context.beginPath();
+            context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+            context.stroke();
     }
 
     activate() {
@@ -99,6 +141,9 @@ export class Deck extends GameObject {
 
             this.game.addObject(drawn);
             drawn.play();
+            if(this.type === DeckType.DrawPile) {
+                drawn.flip();
+            }
 
             this.drawInProgress = true;
         }
@@ -109,7 +154,7 @@ export class Deck extends GameObject {
     }
 
     returnCard = (card) => {
-        card.returntoDeck(this);
+        card.addToDeck(this);
         //adds to top;
         this.cards.unshift(card);
         this.game.removeObject(card);
@@ -133,3 +178,9 @@ export class Deck extends GameObject {
         this.drawInProgress = false;
     }
 }
+
+export const DeckType = {
+    DrawPile: 'DrawPile',
+    DiscardPile: 'DiscardPile',
+    Stack: 'Stack',
+};

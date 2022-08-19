@@ -53,6 +53,10 @@ body {
     z-index: 2;
 }
 
+img {
+    display: none;
+}
+
 /* #deck {
     box-shadow: 0 125px 0 -124px rgb(188, 25, 25),
      0 123px 0 -122px rgb(252, 214, 214),

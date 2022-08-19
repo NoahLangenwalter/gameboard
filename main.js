@@ -1,5 +1,5 @@
 import { Card } from "./card.js";
-import { Deck } from "./deck.js";
+import { Deck, DeckType } from "./deck.js";
 import { Game } from "./game.js";
 import { Mouse } from "./mouse.js";
 
@@ -36,7 +36,10 @@ window.onload = function () {
     }
 
     function startGame() {
-        game.objects.push(new Deck(game, 4, 0, 0));
+        const discard = new Deck(game, DeckType.DiscardPile, 0, 650, 250, 0);
+        const drawPile = new Deck(game, DeckType.DrawPile, 4, 250, 250, 1)
+        game.addObject(discard);
+        game.addObject(drawPile);
         requestAnimationFrame(animate);
     }
 
