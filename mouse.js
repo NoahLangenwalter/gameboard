@@ -109,6 +109,9 @@ export class Mouse {
                     else if (!this.game.isSelected(obj)) {
                         this.game.selectObject(obj, event.shiftKey);
                     }
+                    else if (event.shiftKey) {
+                        this.game.deselectObject(obj);
+                    }
                 }
             }
         }
