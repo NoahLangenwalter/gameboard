@@ -2,7 +2,7 @@ import { View } from "./view.js";
 
 export class Game {
     gridScale = 100;
-    colors = { dark: "#005782", medium: "#569abc", light: "#CED8F7", highlight: "#33ccff", select: "black" };
+    colors = { dark: "#005793", medium: "#569acd", light: "#CED8F7", highlight: "#33ccff", select: "black" };
     nextZ = 0;
 
     constructor(canvas, ctx) {
