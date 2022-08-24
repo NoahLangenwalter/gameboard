@@ -19,17 +19,10 @@ export class Deck extends GameObject {
         this.isCardTarget = true;
     }
 
+    get isInteractable() { return !this.drawInProgress }
+
     draw(context) {
-        if (this.hovering) {
-            this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
-            const hR = 20;
-            const anchor = this.game.view.applyTransformTo(this.x, this.y);
-            context.strokeStyle = this.game.colors.highlight;
-            context.lineWidth = hR;
-            context.globalAlpha = 0.5;
-            context.strokeRect(anchor.x, anchor.y + 1, this.width * this.game.view.scale, this.height * this.game.view.scale);
-            context.globalAlpha = 1;
-        }
+        this.drawHighlight(context);
 
         this.game.view.apply();
         if(this.dragging) {
@@ -56,6 +49,8 @@ export class Deck extends GameObject {
             this.cards[0].draw(context);
         }
         
+        this.drawSelected(context);
+        
         // deck icon overlay
         this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
         let radius = 21 - (.5/this.game.view.scale);
@@ -70,7 +65,6 @@ export class Deck extends GameObject {
 
         let iconSize = radius*1.25;
         context.drawImage(this.icon, center.x-iconSize/2, center.y-iconSize/2, iconSize, iconSize);
-        
     }
 
     drawAsDrawPile(context) {
@@ -158,6 +152,7 @@ export class Deck extends GameObject {
         //adds to top;
         this.cards.unshift(card);
         this.game.removeObject(card);
+        this.game.deselectObject(card);
 
         this.empty = this.cards.length === 0;
     }
@@ -166,7 +161,7 @@ export class Deck extends GameObject {
         this.cards = [];
 
         for (let i = 1; i < numberOfCards + 1; i++) {
-            this.cards.push(new Card(this.game, this, i, this.handleDrawn));
+            this.returnCard(new Card(this.game, i));
         }
 
         this.shuffle();

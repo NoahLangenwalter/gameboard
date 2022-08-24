@@ -24,7 +24,7 @@ window.onload = function () {
 
         game.draw();
 
-        mouse.draw();
+        // mouse.draw();
 
         requestAnimationFrame(animate);
     }
@@ -40,6 +40,11 @@ window.onload = function () {
         const drawPile = new Deck(game, DeckType.DrawPile, 4, 250, 250, 1)
         game.addObject(discard);
         game.addObject(drawPile);
+        game.addObject(new Card(game, "A", 0, 0, 2));
+        game.addObject(new Card(game, "B", 0, 0, 2));
+        game.addObject(new Card(game, "C", 0, 0, 2));
+        game.addObject(new Card(game, "D", 0, 0, 2));
+        game.addObject(new Card(game, "E", 0, 0, 2));
         requestAnimationFrame(animate);
     }
 

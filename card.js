@@ -5,23 +5,15 @@ import { DeckType } from "./deck.js";
 export class Card extends GameObject {
     isFaceUp = false;
     drawing = false;
+    deck = null;
 
-    flipping = false;
-    playing = false;
-    constructor(game, deck=null, number, drawnHandler=null, startX = 0, startY = 0, startZ = 0) {
+    constructor(game, number, startX = 0, startY = 0, startZ = 0) {
         super(game, number, startX, startY, startZ);
 
-        this.deck = deck;
-        this.inDeck = deck !== null;
-        if(this.inDeck) {
-            this.x = deck.x;
-            this.y = deck.y;
-        }
         this.width = 250;
         this.height = 350;
 
         this.number = number;
-        this.drawnHandler = drawnHandler;
 
         this.animations = {
             flipping: new FlipAnimation(),
@@ -29,13 +21,20 @@ export class Card extends GameObject {
         }
     }
 
-    get pos() {
-        if (this.inDeck) {
-            return { x: this.deck.x, y: this.deck.y };
-        }
-        else {
-            return { x: this.x, y: this.y };
-        }
+    get x() {
+        return this.inDeck ? this.deck.x : this._x;
+    }
+    get y() {
+        return this.inDeck ? this.deck.y : this._y;
+    }
+    get z() {
+        return this.inDeck ? this.deck.z : this._z;
+    }
+    set x(v) { this._x = v }
+    set y(v) { this._y = v }
+    set z(v) { this._z = v }
+    get isInteractable() {
+        return !this.animations.flipping.status & !this.animations.playing.status;
     }
 
     update() {
@@ -46,7 +45,7 @@ export class Card extends GameObject {
             if (anim.elapsed >= anim.duration) {
                 this.y = anim.targetValues[1];
                 anim.end();
-                this.drawnHandler();
+                this.deck.handleDrawn();
             }
             else {
                 let diffY = anim.targetValues[1] - anim.startValues[1];
@@ -60,23 +59,14 @@ export class Card extends GameObject {
 
             this.isFaceUp = anim.isFaceUp;
 
-            if (anim.elapsed > anim.duration) {
+            if (anim.elapsed >= anim.duration) {
                 anim.end();
             }
         }
     }
 
     draw(context) {
-        if (this.hovering) {
-            this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
-            const hR = 20;
-            const anchor = this.game.view.applyTransformTo(this.pos.x, this.pos.y);
-            context.strokeStyle = this.game.colors.highlight;
-            context.lineWidth = hR;
-            context.globalAlpha = 0.5;
-            context.strokeRect(anchor.x, anchor.y + 1, this.width * this.game.view.scale, this.height * this.game.view.scale);
-            context.globalAlpha = 1;
-        }
+        this.drawHighlight(context);
 
         this.game.view.apply();
         if (this.animations.flipping.status) {
@@ -96,7 +86,7 @@ export class Card extends GameObject {
         }
         context.lineWidth = cR;
         context.shadowColor = "black";
-        context.strokeRect(this.pos.x + (cR / 2) + 5, this.pos.y + (cR / 2) + 5, this.width - cR - 10, this.height - cR - 10);
+        context.strokeRect(this.x + (cR / 2) + 5, this.y + (cR / 2) + 5, this.width - cR - 10, this.height - cR - 10);
         context.shadowBlur = 0;
         context.shadowOffsetX = 0;
         context.shadowOffsetY = 0;
@@ -106,32 +96,34 @@ export class Card extends GameObject {
         context.strokeStyle = this.game.colors.dark;
         context.lineJoin = "round";
         context.lineWidth = cR;
-        context.strokeRect(this.pos.x + (cR / 2), this.pos.y + (cR / 2), this.width - cR, this.height - cR);
-        context.fillRect(this.pos.x + (cR / 2), this.pos.y + (cR / 2), this.width - cR, this.height - cR);
+        context.strokeRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
+        context.fillRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
         context.strokeStyle = this.isFaceUp ? "white" : this.game.colors.light;
         context.lineWidth = 8;
-        context.strokeRect(this.pos.x + 15, this.pos.y + 15, this.width - 30, this.height - 30);
+        context.strokeRect(this.x + 15, this.y + 15, this.width - 30, this.height - 30);
 
         if (this.isFaceUp) {
             context.fillStyle = "black";
             context.font = "100px Arial";
             context.textBaseline = "middle";
             context.textAlign = "center";
-            context.fillText(this.number, this.pos.x + this.width / 2, this.pos.y + this.height / 2);
+            context.fillText(this.number, this.x + this.width / 2, this.y + this.height / 2);
         }
         else {
             context.beginPath();
-            context.moveTo(this.pos.x + 15, this.pos.y + 15);
-            context.lineTo(this.pos.x + this.width - 15, this.pos.y + this.height - 15);
+            context.moveTo(this.x + 15, this.y + 15);
+            context.lineTo(this.x + this.width - 15, this.y + this.height - 15);
             context.stroke();
 
             context.beginPath();
-            context.moveTo(this.pos.x + 15, this.pos.y + this.height - 15);
-            context.lineTo(this.pos.x + this.width - 15, this.pos.y + 15);
+            context.moveTo(this.x + 15, this.y + this.height - 15);
+            context.lineTo(this.x + this.width - 15, this.y + 15);
             context.stroke();
         }
         context.transform(1, 0, 0, 1, 0, 0);
         this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        this.drawSelected(context);
     }
 
     play = () => {
@@ -156,13 +148,13 @@ export class Card extends GameObject {
     }
 
     flip = () => {
-        this.animations.flipping.start([this.pos.x, this.width, this.isFaceUp]);
+        this.animations.flipping.start([this.x, this.width, this.isFaceUp]);
     }
 }
 
 class FlipAnimation extends AnimationData {
     constructor() {
-        super(200);
+        super(150);
         this.matrix = [1, 0, 0, 1, 0, 0];
     }
     update() {
@@ -175,7 +167,7 @@ class FlipAnimation extends AnimationData {
         this.matrix[0] = Math.abs(this.elapsedPercent * 2 - 1);
         this.matrix[1] = 0;//.25 * (1 - this.matrix[0]);
         this.matrix[3] = 1;
-        this.matrix[4] = (this.x + this.width/2) * (1 - this.matrix[0]);
+        this.matrix[4] = (this.x + this.width / 2) * (1 - this.matrix[0]);
     }
 
     start(startValues, targetValues = null) {

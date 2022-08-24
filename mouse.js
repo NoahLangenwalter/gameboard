@@ -20,6 +20,9 @@ export class Mouse {
         game.canvas.addEventListener("wheel", this.onMouseEvent, { passive: false });
     }
 
+    get isDragging() { return this.#dragging !== null; }
+    get isHovering() { return this.#hovering !== null; }
+
     update() {
         this.updateHover();
     }
@@ -55,12 +58,12 @@ export class Mouse {
 
     updateHover() {
         const newHover = this.detectTopObject(this.#dragging);
-        if (this.#hovering !== null & (newHover === null | this.#hovering !== newHover)) {
+        if (this.#hovering !== null & (newHover === null || this.#hovering !== newHover || !this.#hovering.isInteractable)) {
             this.#hovering.hoverLeave();
             this.#hovering = null;
         }
 
-        if (this.#hovering === null & newHover !== null) {
+        if (this.#hovering === null & newHover !== null && newHover.isInteractable) {
             this.#hovering = newHover;
             this.#hovering.hoverEnter();
         }
@@ -79,6 +82,9 @@ export class Mouse {
             if (obj !== null) {
                 this.startDrag(obj);
             }
+            else {
+                this.game.clearSelection();
+            }
         }
     }
 
@@ -95,7 +101,8 @@ export class Mouse {
             if (clicked) {
                 let obj = this.detectTopObject();
                 if (obj !== null) {
-                    obj.activate();
+                    this.game.selectObject(obj);
+                    // obj.activate();
                 }
             }
         }
@@ -107,6 +114,10 @@ export class Mouse {
         this.leftButton = this.rightButton = false;
         this.x = -1;
         this.y = -1;
+
+        if(this.isDragging) {
+            this.endDrag();
+        }
     }
 
     handleWheel(event) {
@@ -125,6 +136,13 @@ export class Mouse {
         this.#dragging = object;
         this.setDragOffset();
         this.#dragging.pickUp();
+
+        if(this.game.isSelected(object)) {
+            //TODO: drag all of 'em!
+        }
+        else {
+            this.game.clearSelection();
+        }
     }
 
     drag() {
@@ -150,19 +168,23 @@ export class Mouse {
     }
 
     detectTopObject(ignored = null) {
-        var object = null;
+        var found = null;
         let index = this.game.objects.length - 1;
-        while (object === null & index > -1) {
-            if (this.game.objects[index].isAt(this.x, this.y)) {
-                object = this.game.objects[index];
-                if (object === ignored) {
-                    object = null;
+        while (found === null & index > -1) {
+            const obj = this.game.objects[index];
+            if (obj.isAt(this.x, this.y)) {
+                found = this.game.objects[index];
+                if (!found.isInteractable) {
+                    return null;
+                }
+                if (found === ignored) {
+                    found = null;
                 }
             }
             index--;
         }
 
-        return object;
+        return found;
     }
 
     draw() {
@@ -179,7 +201,4 @@ export class Mouse {
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.stroke();
     }
-
-    get isDragging() { return this.#dragging !== null; }
-    get isHovering() { return this.#hovering !== null; }
 }

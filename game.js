@@ -2,7 +2,7 @@ import { View } from "./view.js";
 
 export class Game {
     gridScale = 100;
-    colors = {dark: "#005782", medium: "#569abc", light: "#CED8F7", highlight: "#00ffff"};
+    colors = { dark: "#005782", medium: "#569abc", light: "#CED8F7", highlight: "#33ccff", select: "black" };
     nextZ = 0;
 
     constructor(canvas, ctx) {
@@ -12,10 +12,11 @@ export class Game {
         this.height = canvas.height;
         this.objects = [];
         this.view = new View(ctx);
+        this.selected = new Set();
     }
 
     update() {
-        this.objects.sort((a,b)=> {
+        this.objects.sort((a, b) => {
             return a.z > b.z ? 1 : -1;
         });
 
@@ -27,7 +28,7 @@ export class Game {
         // info.textContent = "Scale: " + this.view.scale.toFixed(4) + " (1px = " + (1 / this.view.scale).toFixed(4) + " world px) - ";
         // info.textContent += "Offset: " + this.view.offset.x.toFixed(2) + "," + this.view.offset.x.toFixed(2) + " - ";
     }
-    
+
     draw() {
         this.drawGrid();
 
@@ -35,7 +36,7 @@ export class Game {
             this.objects[i].draw(this.ctx);
         }
     }
-    
+
     addObject(object, z = -1) {
         if (z < 0) {
             object.z = this.nextZ;
@@ -43,13 +44,43 @@ export class Game {
         }
         this.objects.push(object);
     }
-    
+
     removeObject(object) {
-        this.objects.splice(this.objects.indexOf(object), 1);
+        const index = this.objects.indexOf(object);
+        if (index >= 0) {
+            this.deselectObject(object);
+            this.objects.splice(index, 1);
+        }
+    }
+
+    selectObject(object, isMulti = false) {
+        if (!isMulti) {
+            this.clearSelection();
+        }
+
+        this.selected.add(object);
+        object.select();
+    }
+
+    deselectObject(object) {
+        this.selected.delete(object);
+        object.deselect();
+    }
+
+    isSelected(object) {
+        return this.selected.has(object);
+    }
+
+    clearSelection() {
+        for (const obj of this.selected.values()) {
+            obj.deselect();
+        }
+
+        this.selected = new Set();
     }
 
     drawGrid() {
-        const context = this.ctx;  
+        const context = this.ctx;
         const scale = 1 / this.view.scale;
         const size = Math.max(this.canvas.width, this.canvas.height) * scale + this.gridScale * 2;
         const x = ((-this.view.offset.x * scale - this.gridScale) / this.gridScale | 0) * this.gridScale;
