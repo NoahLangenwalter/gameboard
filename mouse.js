@@ -3,6 +3,8 @@ export class Mouse {
     y = 0;
     oldX = 0;
     oldY = 0;
+    dragStartX = 0;
+    dragStartY = 0;
     leftButton = false;
     rightButton = false;
     lastDown = Date.now();
@@ -39,7 +41,7 @@ export class Mouse {
             this.handleMouseDown(event);
         }
         else if (event.type === "mouseup") {
-            this.handleMouseUp();
+            this.handleMouseUp(event);
         }
         else if (event.type === "mouseout") {
             this.handleMouseOut();
@@ -82,13 +84,13 @@ export class Mouse {
             if (obj !== null) {
                 this.startDrag(obj);
             }
-            else {
+            else if (!event.shiftKey) {
                 this.game.clearSelection();
             }
         }
     }
 
-    handleMouseUp() {
+    handleMouseUp(event) {
         let clicked = false;
         if (Date.now() - this.lastDown < this.clickSpeed) {
             clicked = true;
@@ -101,8 +103,12 @@ export class Mouse {
             if (clicked) {
                 let obj = this.detectTopObject();
                 if (obj !== null) {
-                    this.game.selectObject(obj);
-                    // obj.activate();
+                    if (event.ctrlKey) {
+                        obj.activate();
+                    }
+                    else if (!this.game.isSelected(obj)) {
+                        this.game.selectObject(obj, event.shiftKey);
+                    }
                 }
             }
         }
@@ -115,7 +121,7 @@ export class Mouse {
         this.x = -1;
         this.y = -1;
 
-        if(this.isDragging) {
+        if (this.isDragging) {
             this.endDrag();
         }
     }
@@ -136,12 +142,11 @@ export class Mouse {
         this.#dragging = object;
         this.setDragOffset();
         this.#dragging.pickUp();
+        this.dragStartX = this.x;
+        this.dragStartY = this.y;
 
-        if(this.game.isSelected(object)) {
+        if (this.game.isSelected(object)) {
             //TODO: drag all of 'em!
-        }
-        else {
-            this.game.clearSelection();
         }
     }
 
@@ -150,6 +155,16 @@ export class Mouse {
         const x = mouseinWorld.x - this.#dragOffset.x;
         const y = mouseinWorld.y - this.#dragOffset.y;
         this.#dragging.moveTo(x, y);
+
+        if (!this.game.isSelected(this.#dragging) && this.calculateDragDistance() > 10) {
+            this.game.clearSelection();
+        }
+    }
+
+    calculateDragDistance() {
+        const start = this.dragStartX + this.dragStartY;
+        const end = this.x + this.y;
+        return Math.abs(start - end);
     }
 
     endDrag() {

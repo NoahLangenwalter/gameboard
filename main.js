@@ -40,11 +40,10 @@ window.onload = function () {
         const drawPile = new Deck(game, DeckType.DrawPile, 4, 250, 250, 1)
         game.addObject(discard);
         game.addObject(drawPile);
-        game.addObject(new Card(game, "A", 0, 0, 2));
-        game.addObject(new Card(game, "B", 0, 0, 2));
-        game.addObject(new Card(game, "C", 0, 0, 2));
-        game.addObject(new Card(game, "D", 0, 0, 2));
-        game.addObject(new Card(game, "E", 0, 0, 2));
+        game.addObject(new Card(game, "A", 1050, 200, 2));
+        game.addObject(new Card(game, "B", 1050, 240, 3));
+        game.addObject(new Card(game, "C", 1050, 280, 4));
+        game.addObject(new Card(game, "D", 1050, 320, 5));
         requestAnimationFrame(animate);
     }
 
