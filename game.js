@@ -76,7 +76,7 @@ export class Game {
             obj.deselect();
         }
 
-        this.selected = new Set();
+        this.selected.clear();
     }
 
     drawGrid() {

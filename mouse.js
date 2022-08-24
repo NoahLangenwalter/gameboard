@@ -1,3 +1,5 @@
+import { Card } from './card.js';
+
 export class Mouse {
     x = 0;
     y = 0;
@@ -8,7 +10,7 @@ export class Mouse {
     leftButton = false;
     rightButton = false;
     lastDown = Date.now();
-    #dragging = null;
+    #dragging = new Set();
     #dragOffset = { x: 0, y: 0 };
     #hovering = null;
     clickSpeed = 125;
@@ -22,7 +24,7 @@ export class Mouse {
         game.canvas.addEventListener("wheel", this.onMouseEvent, { passive: false });
     }
 
-    get isDragging() { return this.#dragging !== null; }
+    get isDragging() { return this.#dragging.size > 0; }
     get isHovering() { return this.#hovering !== null; }
 
     update() {
@@ -60,12 +62,26 @@ export class Mouse {
 
     updateHover() {
         const newHover = this.detectTopObject(this.#dragging);
-        if (this.#hovering !== null & (newHover === null || this.#hovering !== newHover || !this.#hovering.isInteractable)) {
+        if (this.#hovering !== null && (newHover === null || this.#hovering !== newHover || !this.#hovering.isInteractable)) {
             this.#hovering.hoverLeave();
             this.#hovering = null;
         }
 
-        if (this.#hovering === null & newHover !== null && newHover.isInteractable) {
+        if (this.isDragging) {
+            let draggingCards = false;
+            for (const dragee of this.#dragging.values()) {
+                if (dragee.obj instanceof Card) {
+                    draggingCards = true;
+                    break;
+                }
+            }
+
+            if (draggingCards && newHover !== null && newHover.isCardTarget) {
+                this.#hovering = newHover;
+                this.#hovering.hoverEnter();
+            }
+        }
+        else if (this.#hovering === null && newHover !== null && newHover.isInteractable) {
             this.#hovering = newHover;
             this.#hovering.hoverEnter();
         }
@@ -141,25 +157,34 @@ export class Mouse {
     }
 
     startDrag(object) {
-        object.z = this.game.nextZ;
-        this.#dragging = object;
-        this.setDragOffset();
-        this.#dragging.pickUp();
+        if (this.game.isSelected(object)) {
+            for (const obj of this.game.selected.values()) {
+                const offset = this.getDragOffset(obj);
+                obj.pickUp();
+                this.#dragging.add({ offset, obj });
+            }
+        }
+        else {
+            const offset = this.getDragOffset(object);
+            object.pickUp();
+            object.z = this.game.nextZ;
+            this.#dragging.add({ offset, obj: object });
+        }
+
         this.dragStartX = this.x;
         this.dragStartY = this.y;
-
-        if (this.game.isSelected(object)) {
-            //TODO: drag all of 'em!
-        }
     }
 
     drag() {
         const mouseinWorld = this.game.view.toWorld(this.x, this.y);
-        const x = mouseinWorld.x - this.#dragOffset.x;
-        const y = mouseinWorld.y - this.#dragOffset.y;
-        this.#dragging.moveTo(x, y);
 
-        if (!this.game.isSelected(this.#dragging) && this.calculateDragDistance() > 10) {
+        for (const dragee of this.#dragging.values()) {
+            const x = mouseinWorld.x - dragee.offset.x;
+            const y = mouseinWorld.y - dragee.offset.y;
+            dragee.obj.moveTo(x, y);
+        }
+
+        if (this.#dragging.size === 1 && !this.game.isSelected(this.#dragging.values().next().value.obj) && this.calculateDragDistance() > 10) {
             this.game.clearSelection();
         }
     }
@@ -171,21 +196,28 @@ export class Mouse {
     }
 
     endDrag() {
-        this.#dragging.putDown();
+        for (const dragee of this.#dragging.values()) {
+            dragee.obj.putDown();
+        }
 
         if (this.isHovering && this.#hovering.isCardTarget) {
-            this.#hovering.returnCard(this.#dragging);
+            for (const dragee of this.#dragging.values()) {
+                if (dragee.obj instanceof Card) {
+                    this.#hovering.returnCard(dragee.obj);
+                }
+            }
         }
-        this.#dragging = null;
+        this.#dragging.clear();
     }
 
-    setDragOffset() {
+    getDragOffset(object) {
         const mouseInWorld = this.game.view.toWorld(this.x, this.y);
-        this.#dragOffset.x = mouseInWorld.x - this.#dragging.x;
-        this.#dragOffset.y = mouseInWorld.y - this.#dragging.y;
+        const x = mouseInWorld.x - object.x;
+        const y = mouseInWorld.y - object.y;
+        return { x, y };
     }
 
-    detectTopObject(ignored = null) {
+    detectTopObject(ignored = new Set()) {
         var found = null;
         let index = this.game.objects.length - 1;
         while (found === null & index > -1) {
@@ -195,8 +227,12 @@ export class Mouse {
                 if (!found.isInteractable) {
                     return null;
                 }
-                if (found === ignored) {
-                    found = null;
+
+                // if (ignored.has(found)) {
+                for (const dragee of ignored.values()) {
+                    if (found === dragee.obj) {
+                        found = null;
+                    }
                 }
             }
             index--;
