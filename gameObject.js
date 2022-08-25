@@ -79,17 +79,17 @@ export class GameObject {
     drawSelected(context) {
         if (this.selected) {
             this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
-            const hR = 10;
+            const hR = 20;
             const scaledHR = hR * this.game.view.scale;
             const anchor = this.game.view.applyTransformTo(this.x, this.y);
             context.lineJoin = "miter";
             context.lineWidth = 2;
             context.strokeStyle = "white";
-            context.strokeRect(anchor.x - scaledHR, anchor.y - scaledHR, (this.width + hR*2) * this.game.view.scale, (this.height + hR*2) * this.game.view.scale);
+            context.strokeRect(anchor.x - scaledHR, anchor.y - scaledHR, (this.width + hR * 2) * this.game.view.scale, (this.height + hR * 2) * this.game.view.scale);
             context.lineWidth = 2;
             context.setLineDash([2, 2]);
             context.strokeStyle = this.game.colors.select;
-            context.strokeRect(anchor.x - scaledHR, anchor.y - scaledHR, (this.width + hR*2) * this.game.view.scale, (this.height + hR*2) * this.game.view.scale);
+            context.strokeRect(anchor.x - scaledHR, anchor.y - scaledHR, (this.width + hR * 2) * this.game.view.scale, (this.height + hR * 2) * this.game.view.scale);
             context.setLineDash([]);
         }
     }
@@ -132,5 +132,14 @@ export class GameObject {
         const height = this.height * scale;
 
         return hitX >= screenPos.x & hitX <= screenPos.x + width & hitY >= screenPos.y & hitY <= screenPos.y + height;
+    }
+
+    isOverlapping(hitBounds) {
+        const screenBounds = { topLeft: this.game.view.toScreen(this.x, this.y), bottomRight: this.game.view.toScreen(this.right, this.bottom) };
+
+        return hitBounds.topLeft.x < screenBounds.bottomRight.x &&
+            hitBounds.topLeft.y < screenBounds.bottomRight.y &&
+            hitBounds.bottomRight.x > screenBounds.topLeft.x &&
+            hitBounds.bottomRight.y > screenBounds.topLeft.y;
     }
 } 

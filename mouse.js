@@ -11,9 +11,10 @@ export class Mouse {
     rightButton = false;
     lastDown = Date.now();
     #dragging = new Set();
-    #dragOffset = { x: 0, y: 0 };
     #hovering = null;
     clickSpeed = 125;
+    dragSelect = false;
+    dragSelectStart = { x: 0, y: 0 };
     constructor(game) {
         this.game = game;
 
@@ -29,6 +30,42 @@ export class Mouse {
 
     update() {
         this.updateHover();
+    }
+
+    draw() {
+        if (this.dragSelect) {
+            const context = this.game.ctx;
+            this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            const start = this.dragSelectStart;
+            context.fillStyle = this.game.colors.highlight;
+            context.globalAlpha = 0.15;
+            context.fillRect(start.x, start.y, this.x - start.x, this.y - start.y);
+            context.globalAlpha = 1;
+            context.lineJoin = "miter";
+            context.lineWidth = 2;
+            context.strokeStyle = "white";
+            context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
+            context.lineWidth = 2;
+            context.setLineDash([2, 2]);
+            context.strokeStyle = this.game.colors.select;
+            context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
+
+            context.beginPath();
+            context.moveTo(start.x - 5, start.y);
+            context.lineTo(start.x + 5, start.y);
+            context.moveTo(start.x, start.y - 5);
+            context.lineTo(start.x, start.y + 5);
+            context.stroke();
+
+            context.beginPath();
+            context.moveTo(this.x - 5, this.y);
+            context.lineTo(this.x + 5, this.y);
+            context.moveTo(this.x, this.y - 5);
+            context.lineTo(this.x, this.y + 5);
+            context.stroke();
+            context.setLineDash([]);
+        }
     }
 
     onMouseEvent = (event) => {
@@ -81,7 +118,7 @@ export class Mouse {
                 this.#hovering.hoverEnter();
             }
         }
-        else if (this.#hovering === null && newHover !== null && newHover.isInteractable) {
+        else if (!this.dragSelect && this.#hovering === null && newHover !== null && newHover.isInteractable) {
             this.#hovering = newHover;
             this.#hovering.hoverEnter();
         }
@@ -100,8 +137,14 @@ export class Mouse {
             if (obj !== null) {
                 this.startDrag(obj);
             }
-            else if (!event.shiftKey) {
-                this.game.clearSelection();
+            else {
+                if (!event.shiftKey) {
+                    this.game.clearSelection();
+                }
+
+                this.dragSelect = true;
+                this.dragSelectStart.x = this.x;
+                this.dragSelectStart.y = this.y;
             }
         }
     }
@@ -130,6 +173,20 @@ export class Mouse {
                     }
                 }
             }
+
+            if (this.dragSelect) {
+                const start = this.dragSelectStart;
+                const topLeft = { x: Math.min(start.x, this.x), y: Math.min(start.y, this.y) };
+                const bottomRight = { x: Math.max(start.x, this.x), y: Math.max(start.y, this.y) };
+                this.game.objects.forEach(obj => {
+                    if (!this.game.isSelected(obj) && obj.isOverlapping({ topLeft, bottomRight })) {
+                        this.game.selectObject(obj, true);
+                    }
+                });
+            }
+            this.dragSelect = false;
+            this.dragSelectStart.x = -1;
+            this.dragSelectStart.y = -1;
         }
 
         this.leftButton = this.rightButton = false;
@@ -143,6 +200,8 @@ export class Mouse {
         if (this.isDragging) {
             this.endDrag();
         }
+
+        this.dragSelect = false;
     }
 
     handleWheel(event) {
@@ -161,6 +220,7 @@ export class Mouse {
             for (const obj of this.game.selected.values()) {
                 const offset = this.getDragOffset(obj);
                 obj.pickUp();
+                obj.z = this.game.nextZ;
                 this.#dragging.add({ offset, obj });
             }
         }
@@ -239,20 +299,5 @@ export class Mouse {
         }
 
         return found;
-    }
-
-    draw() {
-        const worldCoord = this.game.view.toWorld(this.x, this.y);
-        this.game.view.apply();
-        const context = this.game.ctx;
-        context.lineWidth = 1;
-        context.strokeStyle = "black";
-        context.beginPath();
-        context.moveTo(worldCoord.x - 10, worldCoord.y);
-        context.lineTo(worldCoord.x + 10, worldCoord.y);
-        context.moveTo(worldCoord.x, worldCoord.y - 10);
-        context.lineTo(worldCoord.x, worldCoord.y + 10);
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.stroke();
     }
 }

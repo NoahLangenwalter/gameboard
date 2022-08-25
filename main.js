@@ -24,7 +24,7 @@ window.onload = function () {
 
         game.draw();
 
-        // mouse.draw();
+        mouse.draw();
 
         requestAnimationFrame(animate);
     }

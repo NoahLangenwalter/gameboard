@@ -2,8 +2,8 @@ import { View } from "./view.js";
 
 export class Game {
     gridScale = 100;
-    colors = { dark: "#005793", medium: "#569acd", light: "#CED8F7", highlight: "#33ccff", select: "black" };
-    nextZ = 0;
+    colors = { dark: "#005793", medium: "#569acd", light: "#CED8F7", highlight: "#33ccff", select: "#569acd" };
+    #nextZ = 0;
 
     constructor(canvas, ctx) {
         this.canvas = canvas;
@@ -15,6 +15,12 @@ export class Game {
         this.selected = new Set();
     }
 
+    get nextZ() {
+        const result = this.#nextZ;
+        this.#nextZ++;
+        return result;   
+    }
+
     update() {
         this.objects.sort((a, b) => {
             return a.z > b.z ? 1 : -1;
@@ -23,6 +29,7 @@ export class Game {
         for (let i = 0; i < this.objects.length; i++) {
             this.objects[i].z = i;
             this.objects[i].update();
+            this.#nextZ = i + 1;
         }
 
         // info.textContent = "Scale: " + this.view.scale.toFixed(4) + " (1px = " + (1 / this.view.scale).toFixed(4) + " world px) - ";
@@ -39,8 +46,8 @@ export class Game {
 
     addObject(object, z = -1) {
         if (z < 0) {
-            object.z = this.nextZ;
-            this.nextZ++;
+            object.z = this.#nextZ;
+            this.#nextZ++;
         }
         this.objects.push(object);
     }
