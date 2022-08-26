@@ -28,7 +28,7 @@ export class Editor {
         const paddingY = (object.height - object.maxTextHeight) / 2;
         this.editBox.style.padding = paddingY + "px " + paddingX + "px";
         this.editBox.style.minWidth = this.editBox.style.width = object.width;
-        this.editBox.style.top = `-${7*scale}px`;
+        this.editBox.style.top = `-${7 * scale}px`;
         // this.editBox.style.minHeight = object.fontSize * object.lineCount;
 
         this.editBox.innerText = object.content;
@@ -41,10 +41,11 @@ export class Editor {
             const selection = window.getSelection();
             selection.selectAllChildren(this.editBox);
             selection.collapseToEnd();
-            if(this.editBox.firstChild.nodeName === "DIV") {
+            if (this.editBox.firstChild.nodeName === "DIV") {
                 this.editBox.removeChild(this.editBox.firstChild);
             }
             this.editBox.addEventListener("input", this.onInput);
+            this.editBox.addEventListener('paste', this.onPaste);
         }, 0);
     }
 
@@ -55,6 +56,7 @@ export class Editor {
         this.editObj.endEdit();
 
         this.editBox.removeEventListener("input", this.onInput);
+        this.editBox.removeEventListener("paste", this.onPaste);
 
         document.activeElement.blur();
         this.game.canvas.focus();
@@ -66,5 +68,35 @@ export class Editor {
         this.editBox.style.fontSize = this.editObj.fontSize;
         this.editBox.style.lineHeight = this.editObj.lineHeight + "px";
         // this.editBox.style.minHeight = this.editObj.fontSize * this.editObj.lineCount;
+    }
+
+    onPaste = (event) => {
+        // Prevent the default action
+        event.preventDefault();
+
+        // Get the copied text from the clipboard
+        const text = event.clipboardData
+            ? (event.originalEvent || event).clipboardData.getData('text/plain')
+            : // For IE
+            window.clipboardData
+                ? window.clipboardData.getData('Text')
+                : '';
+
+        if (document.queryCommandSupported('insertText')) {
+            document.execCommand('insertText', false, text);
+        } else {
+            // Insert text at the current position of caret
+            const range = document.getSelection().getRangeAt(0);
+            range.deleteContents();
+
+            const textNode = document.createTextNode(text);
+            range.insertNode(textNode);
+            range.selectNodeContents(textNode);
+            range.collapse(false);
+
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
     }
 } 
