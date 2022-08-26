@@ -10,6 +10,7 @@ export class Mouse {
     leftButton = false;
     rightButton = false;
     lastDown = Date.now();
+    previousDown = Date.now();
     #dragging = new Set();
     #hovering = null;
     clickSpeed = 125;
@@ -27,6 +28,7 @@ export class Mouse {
 
     get isDragging() { return this.#dragging.size > 0; }
     get isHovering() { return this.#hovering !== null; }
+    get hoverTarget() { return this.#hovering; }
 
     update() {
         this.updateHover();
@@ -50,21 +52,21 @@ export class Mouse {
             context.setLineDash([2, 2]);
             context.strokeStyle = this.game.colors.select;
             context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
-
-            context.beginPath();
-            context.moveTo(start.x - 5, start.y);
-            context.lineTo(start.x + 5, start.y);
-            context.moveTo(start.x, start.y - 5);
-            context.lineTo(start.x, start.y + 5);
-            context.stroke();
-
-            context.beginPath();
-            context.moveTo(this.x - 5, this.y);
-            context.lineTo(this.x + 5, this.y);
-            context.moveTo(this.x, this.y - 5);
-            context.lineTo(this.x, this.y + 5);
-            context.stroke();
             context.setLineDash([]);
+
+            // context.beginPath();
+            // context.moveTo(start.x - 5, start.y);
+            // context.lineTo(start.x + 5, start.y);
+            // context.moveTo(start.x, start.y - 5);
+            // context.lineTo(start.x, start.y + 5);
+            // context.stroke();
+
+            // context.beginPath();
+            // context.moveTo(this.x - 5, this.y);
+            // context.lineTo(this.x + 5, this.y);
+            // context.moveTo(this.x, this.y - 5);
+            // context.lineTo(this.x, this.y + 5);
+            // context.stroke();
         }
     }
 
@@ -125,7 +127,10 @@ export class Mouse {
     }
 
     handleMouseDown(event) {
+        this.game.exitEditMode();
+
         if (!this.leftButton & !this.rightButton) {
+            this.previousDown = this.lastDown;
             this.lastDown = Date.now();
         }
 
@@ -150,46 +155,33 @@ export class Mouse {
     }
 
     handleMouseUp(event) {
-        let clicked = false;
+        let clicks = 0;
         if (Date.now() - this.lastDown < this.clickSpeed) {
-            clicked = true;
+            clicks++;
+        }
+        if (this.lastDown - this.previousDown < this.clickSpeed * 2) {
+            clicks++;
         }
 
         if (this.leftButton) {
             if (this.isDragging) {
                 this.endDrag();
             }
-            if (clicked) {
-                let obj = this.detectTopObject();
-                if (obj !== null) {
-                    if (event.ctrlKey) {
-                        obj.activate();
-                    }
-                    else if (!this.game.isSelected(obj)) {
-                        this.game.selectObject(obj, event.shiftKey);
-                    }
-                    else if (event.shiftKey) {
-                        this.game.deselectObject(obj);
-                    }
-                }
+            if (clicks === 1) {
+                this.handleLeftClick(event);
+            } else if (clicks === 2) {
+                this.handleDoubleClick();
             }
 
             if (this.dragSelect) {
-                const start = this.dragSelectStart;
-                const topLeft = { x: Math.min(start.x, this.x), y: Math.min(start.y, this.y) };
-                const bottomRight = { x: Math.max(start.x, this.x), y: Math.max(start.y, this.y) };
-                this.game.objects.forEach(obj => {
-                    if (!this.game.isSelected(obj) && obj.isOverlapping({ topLeft, bottomRight })) {
-                        this.game.selectObject(obj, true);
-                    }
-                });
+                this.selectWithinDragRegion();
             }
-            this.dragSelect = false;
-            this.dragSelectStart.x = -1;
-            this.dragSelectStart.y = -1;
         }
 
         this.leftButton = this.rightButton = false;
+        this.dragSelect = false;
+        this.dragSelectStart.x = -1;
+        this.dragSelectStart.y = -1;
     }
 
     handleMouseOut() {
@@ -205,6 +197,8 @@ export class Mouse {
     }
 
     handleWheel(event) {
+        this.game.exitEditMode();
+
         const view = this.game.view;
         if (event.deltaY < 0 & view.scale < view.maxZoom) {
             view.scaleAt({ x: this.x, y: this.y }, 1.1);
@@ -213,6 +207,25 @@ export class Mouse {
             view.scaleAt({ x: this.x, y: this.y }, 1 / 1.1);
         }
         event.preventDefault();
+    }
+
+    handleLeftClick(event) {
+        let obj = this.detectTopObject();
+        if (obj !== null) {
+            if (event.ctrlKey) {
+                obj.activate();
+            }
+            else if (!this.game.isSelected(obj)) {
+                this.game.selectObject(obj, event.shiftKey);
+            }
+            else if (event.shiftKey) {
+                this.game.deselectObject(obj);
+            }
+        }
+    }
+
+    handleDoubleClick() {
+        this.game.enterEditMode();
     }
 
     startDrag(object) {
@@ -249,12 +262,6 @@ export class Mouse {
         }
     }
 
-    calculateDragDistance() {
-        const start = this.dragStartX + this.dragStartY;
-        const end = this.x + this.y;
-        return Math.abs(start - end);
-    }
-
     endDrag() {
         for (const dragee of this.#dragging.values()) {
             dragee.obj.putDown();
@@ -268,6 +275,23 @@ export class Mouse {
             }
         }
         this.#dragging.clear();
+    }
+
+    selectWithinDragRegion() {
+        const start = this.dragSelectStart;
+        const topLeft = { x: Math.min(start.x, this.x), y: Math.min(start.y, this.y) };
+        const bottomRight = { x: Math.max(start.x, this.x), y: Math.max(start.y, this.y) };
+        this.game.objects.forEach(obj => {
+            if (!this.game.isSelected(obj) && obj.isOverlapping({ topLeft, bottomRight })) {
+                this.game.selectObject(obj, true);
+            }
+        });
+    }
+
+    calculateDragDistance() {
+        const start = this.dragStartX + this.dragStartY;
+        const end = this.x + this.y;
+        return Math.abs(start - end);
     }
 
     getDragOffset(object) {

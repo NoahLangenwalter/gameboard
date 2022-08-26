@@ -1,24 +1,30 @@
 import { View } from "./view.js";
+import { Card } from "./card.js";
+import { Editor } from "./editor.js";
 
 export class Game {
     gridScale = 100;
     colors = { dark: "#005793", medium: "#569acd", light: "#CED8F7", highlight: "#33ccff", select: "#569acd" };
     #nextZ = 0;
+    objects = [];
+    selected = new Set();
+    mode = Mode.Play;
 
     constructor(canvas, ctx) {
         this.canvas = canvas;
         this.ctx = ctx;
         this.width = canvas.width;
         this.height = canvas.height;
-        this.objects = [];
         this.view = new View(ctx);
-        this.selected = new Set();
+        this.editor = new Editor(this);
     }
 
-    get nextZ() {
-        const result = this.#nextZ;
-        this.#nextZ++;
-        return result;   
+    get selectionCount() {
+        return this.selected.size;
+    }
+
+    get editTarget() {
+        return this.selected.values().next().value;
     }
 
     update() {
@@ -42,6 +48,33 @@ export class Game {
         for (let i = 0; i < this.objects.length; i++) {
             this.objects[i].draw(this.ctx);
         }
+    }
+
+    drawGrid() {
+        const context = this.ctx;
+        const scale = 1 / this.view.scale;
+        const size = Math.max(this.canvas.width, this.canvas.height) * scale + this.gridScale * 2;
+        const x = ((-this.view.offset.x * scale - this.gridScale) / this.gridScale | 0) * this.gridScale;
+        const y = ((-this.view.offset.y * scale - this.gridScale) / this.gridScale | 0) * this.gridScale;
+
+        this.view.apply();
+        context.lineWidth = 1;
+        context.strokeStyle = "#CEF";
+        context.beginPath();
+        for (var i = 0; i < size; i += this.gridScale) {
+            context.moveTo(x + i, y);
+            context.lineTo(x + i, y + size);
+            context.moveTo(x, y + i);
+            context.lineTo(x + size, y + i);
+        }
+        context.setTransform(1, 0, 0, 1, 0, 0); // reset the transform so the lineWidth is 1
+        context.stroke();
+    }
+
+    get nextZ() {
+        const result = this.#nextZ;
+        this.#nextZ++;
+        return result;
     }
 
     addObject(object, z = -1) {
@@ -84,26 +117,33 @@ export class Game {
         }
 
         this.selected.clear();
+        this.exitEditMode();
     }
 
-    drawGrid() {
-        const context = this.ctx;
-        const scale = 1 / this.view.scale;
-        const size = Math.max(this.canvas.width, this.canvas.height) * scale + this.gridScale * 2;
-        const x = ((-this.view.offset.x * scale - this.gridScale) / this.gridScale | 0) * this.gridScale;
-        const y = ((-this.view.offset.y * scale - this.gridScale) / this.gridScale | 0) * this.gridScale;
-
-        this.view.apply();
-        context.lineWidth = 1;
-        context.strokeStyle = "#CEF";
-        context.beginPath();
-        for (var i = 0; i < size; i += this.gridScale) {
-            context.moveTo(x + i, y);
-            context.lineTo(x + i, y + size);
-            context.moveTo(x, y + i);
-            context.lineTo(x + size, y + i);
+    isSelectionEditable() {
+        if (this.selected.size !== 1) {
+            return false;
         }
-        context.setTransform(1, 0, 0, 1, 0, 0); // reset the transform so the lineWidth is 1
-        context.stroke();
+
+        return this.editTarget.isEditable && (!(this.editTarget instanceof Card) || this.editTarget.isFaceUp);
+    }
+
+    enterEditMode() {
+        if (this.isSelectionEditable()) {
+            this.mode = Mode.Edit;
+            this.editor.start(this.editTarget);
+        }
+    }
+
+    exitEditMode() {
+        if (this.mode == Mode.Edit) {
+            this.mode = Mode.Play;
+            this.editor.end();
+        }
     }
 }
+
+export const Mode = {
+    Play: 'Play',
+    Edit: 'Edit'
+};

@@ -7,12 +7,12 @@
 body {
     margin: 0px;
     padding: 0px;
-    overflow:hidden;
+    overflow: hidden;
     background: #666;
 }
 
 #info {
-    display:block;
+    display: block;
     color: black;
     position: fixed;
     top: 15px;
@@ -37,133 +37,32 @@ body {
     width: 100%;
     height: 100%;
     background: white;
-}
-
-#deck,
-#deck::before,
-#deck::after {
-    width: 250px;
-    height: 350px;
-    border-radius: 13px;
-    border: black solid 2px;
-    background-image: url("cardback.gif");
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 2;
+    z-index: 1;
 }
 
 img {
     display: none;
 }
 
-/* #deck {
-    box-shadow: 0 125px 0 -124px rgb(188, 25, 25),
-     0 123px 0 -122px rgb(252, 214, 214),
-     0 121px 0 -120px rgb(188, 25, 25),
-     0 119px 0 -118px rgb(252, 214, 214),
-     0 112px 0 -111px rgb(188, 25, 25),
-     0 110px 0 -109px rgb(252, 214, 214),
-     0 2px 0 -1px rgb(188, 25, 25),
-     0 3px black,
-     0 5px 0 -1px rgb(188, 25, 25),
-     0 6px black;
-} */
-
-#deck::before,
-#deck::after {
-    display: block;
-    position: absolute;
-    content: " ";
-    left: -2px;
-    z-index: 1;
-}
-
-#deck::before {
-    top: -5px;
-}
-
-#deck::after {
-    top: -8px;
-}
-
-#deck.empty {
-    background-image: none;
-    background-color: lightgray;
-    border: none;
-}
-
-#deck.empty::before {
+#editContainer {
     display: none;
-}
-
-#deck.empty::after {
-    content: "X";
-    font-family: monospace;
+    position: absolute;
     border: none;
-    background: none;
-    color: gray;
-    font-size: 100px;
-    text-align: center;
-    line-height: 350px;
+    justify-content: center;
+    align-items: center;
 }
 
-.card {
-    width: 250px;
-    height: 350px;
-    position: absolute;
-    cursor: grab;
-    z-index: 10;
-    perspective: 1000px;
-    background-color: transparent;
-    border-radius: 13px;
-    border: transparent;
-    animation: playCard .4s ease-out both;
-}
-
-.cardInner {
+#editBox {
     position: relative;
-    width: 246px;
-    height: 346px;
-    transition: transform 0.4s;
-    transform-style: preserve-3d;
-    border-radius: 13px;
-    border: black solid 2px;
-}
-
-.cardBack,
-.cardFront {
-    position: absolute;
-    width: 246px;
-    height: 346px;
-    backface-visibility: hidden;
-    border-radius: 11px;
-    border: transparent;
-}
-
-.cardFront {
-    background-color: rgb(250, 249, 237);
+    font-weight: normal;
+    font-size: 28px;
+    z-index: 2;
+    font-family: Arial, Helvetica, sans-serif;
     text-align: center;
-    line-height: 330px;
-    font-size: 100px;
-    user-select: none;
-    transform: rotateY(180deg);
-}
-
-.cardBack {
-    background-image: url("cardback.gif");
-}
-
-.faceUp .cardInner {
-    transform: rotateY(180deg);
-}
-
-.faceDown .cardInner {
-    transform: rotateY(0deg);
-}
-
-.dragging {
-    cursor: grabbing;
-    z-index: 1000;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, .5);
+    outline: none;
+    color: black;
+    border: none;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    white-space: normal;
 }

@@ -6,7 +6,7 @@ export class Deck extends GameObject {
     empty = true;
 
     constructor(game, type, numberOfCards, startX = 0, startY = 0, startZ = 0) {
-        super(game, "deck", startX, startY, startZ);
+        super(game, startX, startY, startZ);
 
         this.type = type;
         this.width = 250;

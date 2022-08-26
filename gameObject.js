@@ -6,10 +6,10 @@ export class GameObject {
     hovering = false;
     selected = false;
     isCardTarget = false;
+    isEditable = false;
 
-    constructor(game, id, startX = 0, startY = 0, startZ = -1) {
+    constructor(game, startX = 0, startY = 0, startZ = -1) {
         this.game = game;
-        this.id = id;
         this._x = startX;
         this._y = startY;
         this._z = startZ;

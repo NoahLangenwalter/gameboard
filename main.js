@@ -2,6 +2,7 @@ import { Card } from "./card.js";
 import { Deck, DeckType } from "./deck.js";
 import { Game } from "./game.js";
 import { Mouse } from "./mouse.js";
+import { Keyboard } from "./keyboard.js";
 
 window.onload = function () {
 
@@ -11,6 +12,7 @@ window.onload = function () {
     boardCanvas.height = window.innerHeight;
     const game = new Game(boardCanvas, ctx);
     const mouse = new Mouse(game);
+    const keyboard = new Keyboard(game, mouse);
 
     function animate() {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -18,13 +20,13 @@ window.onload = function () {
         ctx.clearRect(0, 0, boardCanvas.width, boardCanvas.height);
 
         game.update();
-
         mouse.update();
+        keyboard.update();
         // info.textContent += "Mouse: " + mouse.x.toFixed(2) + "," + mouse.y.toFixed(2) + " - ";
 
         game.draw();
-
         mouse.draw();
+        keyboard.update();
 
         requestAnimationFrame(animate);
     }
@@ -37,13 +39,14 @@ window.onload = function () {
 
     function startGame() {
         const discard = new Deck(game, DeckType.DiscardPile, 0, 650, 250, 0);
-        const drawPile = new Deck(game, DeckType.DrawPile, 4, 250, 250, 1)
+        const drawPile = new Deck(game, DeckType.DrawPile, 0, 250, 250, 1)
         game.addObject(discard);
         game.addObject(drawPile);
-        game.addObject(new Card(game, "A", 1050, 200, 2));
-        game.addObject(new Card(game, "B", 1050, 240, 3));
-        game.addObject(new Card(game, "C", 1050, 280, 4));
-        game.addObject(new Card(game, "D", 1050, 320, 5));
+        // game.addObject(new Card(game, "A", 1050, 200, 2));
+        // game.addObject(new Card(game, "B", 1050, 240, 3));
+        // game.addObject(new Card(game, "C", 1050, 280, 4));
+        // game.addObject(new Card(game, "supercalifragilisticexpialidocious!", 1050, 320, 5));
+        game.addObject(new Card(game, "this is a test!", 0, 0, 5));
         requestAnimationFrame(animate);
     }
 
