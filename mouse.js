@@ -13,9 +13,10 @@ export class Mouse {
     previousDown = Date.now();
     #dragging = new Set();
     #hovering = null;
-    clickSpeed = 125;
+    clickSpeed = 150;
     dragSelect = false;
     dragSelectStart = { x: 0, y: 0 };
+    dragTimeout = null;
     constructor(game) {
         this.game = game;
 
@@ -141,6 +142,7 @@ export class Mouse {
             let obj = this.detectTopObject();
             if (obj !== null) {
                 this.startDrag(obj);
+                // this.startDrag(obj);
             }
             else {
                 if (!event.shiftKey) {
@@ -155,6 +157,10 @@ export class Mouse {
     }
 
     handleMouseUp(event) {
+        if (this.dragTimeout !== null) {
+            clearTimeout(this.dragTimeout);
+        }
+
         let clicks = 0;
         if (Date.now() - this.lastDown < this.clickSpeed) {
             clicks++;
@@ -162,6 +168,8 @@ export class Mouse {
         if (this.lastDown - this.previousDown < this.clickSpeed * 2) {
             clicks++;
         }
+
+
 
         if (this.leftButton) {
             if (this.isDragging) {
@@ -229,23 +237,29 @@ export class Mouse {
     }
 
     startDrag(object) {
+        const dragCandidates = new Set();
         if (this.game.isSelected(object)) {
             for (const obj of this.game.selected.values()) {
                 const offset = this.getDragOffset(obj);
-                obj.pickUp();
-                obj.z = this.game.nextZ;
-                this.#dragging.add({ offset, obj });
+                dragCandidates.add({ offset, obj });
             }
         }
         else {
             const offset = this.getDragOffset(object);
-            object.pickUp();
-            object.z = this.game.nextZ;
-            this.#dragging.add({ offset, obj: object });
+            dragCandidates.add({ offset, obj: object });
         }
 
         this.dragStartX = this.x;
         this.dragStartY = this.y;
+
+        this.dragTimeout = setTimeout(() => {
+            this.#dragging = dragCandidates;
+            for (const dragee of this.#dragging.values()) {
+                dragee.obj.pickUp();
+                dragee.obj.z = this.game.nextZ;
+            }
+            this.dragTimeout = null;
+        }, this.clickSpeed * 0.8);
     }
 
     drag() {
