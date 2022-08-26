@@ -24,7 +24,7 @@ export class Mouse {
         game.canvas.addEventListener("mouseup", this.onMouseEvent, { passive: true });
         game.canvas.addEventListener("mouseout", this.onMouseEvent, { passive: true });
         game.canvas.addEventListener("mousemove", this.onMouseEvent, { passive: true });
-        game.canvas.addEventListener("wheel", this.onMouseEvent, { passive: false });
+        window.addEventListener("wheel", this.onMouseEvent, { passive: false });
     }
 
     get isDragging() { return this.#dragging.size > 0; }
