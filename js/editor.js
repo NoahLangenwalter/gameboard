@@ -66,6 +66,7 @@ export class Editor {
         let newText = this.editBox.innerHTML;
         newText = newText.replaceAll("<br>", "");
         newText = newText.replaceAll("</div><div>", "<br>");
+        newText = newText.replaceAll("<div></div>", "<br>");
         newText = newText.replaceAll("<div>", "")
         newText = newText.replaceAll("</div>", "")
         newText = newText.replaceAll("<br>", "\n");
