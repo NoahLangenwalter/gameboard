@@ -4,9 +4,6 @@ export class Editor {
         this.game = game;
         this.editContainer = document.getElementById("editContainer");
         this.editBox = document.getElementById("editBox");
-        // this.editText = document.getElementById("editText");
-        // this.final = document.getElementById("final");
-        // document.execCommand("defaultParagraphSeparator", false, "");
     }
 
     start(object) {
@@ -29,9 +26,15 @@ export class Editor {
         this.editBox.style.padding = paddingY + "px " + paddingX + "px";
         this.editBox.style.minWidth = this.editBox.style.width = object.width;
         this.editBox.style.top = `-${7 * scale}px`;
-        // this.editBox.style.minHeight = object.fontSize * object.lineCount;
 
-        this.editBox.innerText = object.content;
+        let splitContent = object.content.split("\n");
+        let newHTML = "";
+
+        splitContent.forEach(line => {
+            newHTML += `<div>${line === "" ? "<br>" : line}</div>`;
+        });
+
+        this.editBox.innerHTML = newHTML;
 
         object.startEdit();
 
@@ -41,9 +44,6 @@ export class Editor {
             const selection = window.getSelection();
             selection.selectAllChildren(this.editBox);
             selection.collapseToEnd();
-            if (this.editBox.firstChild.nodeName === "DIV") {
-                this.editBox.removeChild(this.editBox.firstChild);
-            }
             this.editBox.addEventListener("input", this.onInput);
             this.editBox.addEventListener('paste', this.onPaste);
         }, 0);
@@ -62,12 +62,23 @@ export class Editor {
         this.game.canvas.focus();
     }
 
-    onInput = (event) => {
-        this.editObj.content = this.editBox.innerText.replace(/\n\n/g, "\n");
+    updateEditee() {
+        let newText = this.editBox.innerHTML;
+        newText = newText.replaceAll("<br>", "");
+        newText = newText.replaceAll("</div><div>", "<br>");
+        newText = newText.replaceAll("<div>", "")
+        newText = newText.replaceAll("</div>", "")
+        newText = newText.replaceAll("<br>", "\n");
+        newText = newText.replaceAll("&nbsp;", " ");
+
+        this.editObj.content = newText;
 
         this.editBox.style.fontSize = this.editObj.fontSize;
         this.editBox.style.lineHeight = this.editObj.lineHeight + "px";
-        // this.editBox.style.minHeight = this.editObj.fontSize * this.editObj.lineCount;
+    }
+
+    onInput = (event) => {
+        this.updateEditee();
     }
 
     onPaste = (event) => {
@@ -97,6 +108,16 @@ export class Editor {
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(range);
+        }
+    }
+
+    onKeyDown = (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+
+            document.execCommand('insertHTML', false, '<div><br></div>');
+
+            this.updateEditee();
         }
     }
 } 

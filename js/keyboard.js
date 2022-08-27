@@ -18,10 +18,15 @@ export class Keyboard {
     draw() {
     }
 
-    onKeyDown = (event) => { 
+    onKeyDown = (event) => {
         this.key = event.key;
+        if(["LeftControl", "RightControl", "LeftShift", "RightShift"].includes(event.code)) {
+            return;
+        }
+        
         if (this.game.mode === Mode.Play) {
-            if (event.key === "Enter") {
+            if (event.code === "KeyE" && event.ctrlKey) {
+                event.preventDefault();
                 this.game.enterEditMode();
             }
         }

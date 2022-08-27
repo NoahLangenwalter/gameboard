@@ -5,6 +5,7 @@ import { Editor } from "./editor.js";
 export class Game {
     gridScale = 100;
     colors = { dark: "#005793", medium: "#569acd", light: "#CED8F7", highlight: "#33ccff", select: "#569acd" };
+    font = "permanent_markerregular";
     #nextZ = 0;
     objects = [];
     selected = new Set();

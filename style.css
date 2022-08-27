@@ -1,3 +1,12 @@
+@font-face {
+    font-family: 'permanent_markerregular';
+    src: url('fonts/permanentmarker-regular-webfont.woff2') format('woff2'),
+        url('fonts/permanentmarker-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -57,12 +66,12 @@ img {
     font-weight: normal;
     font-size: 28px;
     z-index: 2;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "permanent_markerregular", Arial, Helvetica, sans-serif;
     text-align: center;
     outline: none;
     color: black;
     border: none;
     overflow: hidden;
     overflow-wrap: break-word;
-    white-space: normal;
+    white-space: pre-wrap;
 }
