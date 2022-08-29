@@ -254,9 +254,11 @@ export class Mouse {
 
         this.dragTimeout = setTimeout(() => {
             this.#dragging = dragCandidates;
+            const nextZ = this.game.nextZ;
+
             for (const dragee of this.#dragging.values()) {
                 dragee.obj.pickUp();
-                dragee.obj.z = this.game.nextZ;
+                dragee.obj.z = dragee.obj.z + nextZ;
             }
             this.dragTimeout = null;
         }, this.clickSpeed * 0.8);
