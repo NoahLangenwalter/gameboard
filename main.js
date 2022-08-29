@@ -38,14 +38,14 @@ window.onload = function () {
     }
 
     function startGame() {
-        // const discard = new Deck(game, DeckType.DiscardPile, 4, 650, 250, 0);
-        // const drawPile = new Deck(game, DeckType.DrawPile, 4, 250, 250, 1)
-        // game.addObject(discard);
-        // game.addObject(drawPile);
-        // game.addObject(new Card(game, "A", 1050, 200, 2));
-        // game.addObject(new Card(game, "B", 1050, 240, 3));
-        // game.addObject(new Card(game, "supercalifragilisticexpialidocious!", 0, 0, 5));
-        loadPlayingCards();
+        const discard = new Deck(game, DeckType.DiscardPile, 4, 650, 250, 0);
+        const drawPile = new Deck(game, DeckType.DrawPile, 4, 250, 250, 1)
+        game.addObject(discard);
+        game.addObject(drawPile);
+        game.addObject(new Card(game, "A", 1050, 200, 2));
+        game.addObject(new Card(game, "B", 1050, 240, 3));
+        game.addObject(new Card(game, "supercalifragilisticexpialidocious!", 0, 0, 5));
+        // loadPlayingCards();
 
         requestAnimationFrame(animate);
     }

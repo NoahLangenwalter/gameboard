@@ -13,8 +13,8 @@ export class Card extends GameObject {
 
         this.width = 250;
         this.height = 350;
-        this.maxTextHeight = this.height * 0.8;
-        this.maxTextWidth = this.width * 0.8;
+        this.maxTextHeight = this.height * 0.9;
+        this.maxTextWidth = this.width * 0.9;
 
         this.content = content.toString();
 
@@ -23,6 +23,7 @@ export class Card extends GameObject {
             playing: new AnimationData(200),
         }
         this.isEditable = true;
+        this.cardBack = document.getElementById("cardBack");
     }
 
     get x() {
@@ -102,15 +103,12 @@ export class Card extends GameObject {
         context.shadowOffsetY = 0;
 
         cR = this.cornerRadius;
-        context.fillStyle = this.isFaceUp ? "white" : this.game.colors.dark;
-        context.strokeStyle = this.game.colors.dark;
+        context.strokeStyle = context.fillStyle = this.isFaceUp ? "white" : this.game.colors.dark;
+        // context.strokeStyle = this.game.colors.dark;
         context.lineJoin = "round";
         context.lineWidth = cR;
         context.strokeRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
         context.fillRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
-        context.strokeStyle = this.isFaceUp ? "white" : this.game.colors.light;
-        context.lineWidth = 8;
-        context.strokeRect(this.x + 15, this.y + 15, this.width - 30, this.height - 30);
 
         if (this.isFaceUp) {
             if (this.isEditing) {
@@ -121,21 +119,52 @@ export class Card extends GameObject {
             }
         }
         else {
-            //Draw card back
-            context.beginPath();
-            context.moveTo(this.x + 15, this.y + 15);
-            context.lineTo(this.x + this.width - 15, this.y + this.height - 15);
-            context.stroke();
-
-            context.beginPath();
-            context.moveTo(this.x + 15, this.y + this.height - 15);
-            context.lineTo(this.x + this.width - 15, this.y + 15);
-            context.stroke();
+            this.drawCardBack(context);
         }
+
+        //draw border
+        const radius = 12;
+        context.beginPath();
+        context.lineWidth = "1";
+        context.strokeStyle = this.game.colors.dark;
+        context.moveTo(this.x + radius, this.y);
+        context.lineTo(this.right - radius, this.y);
+        context.quadraticCurveTo(this.right, this.y, this.right, this.y + radius);
+        context.lineTo(this.right, this.y + this.height - radius);
+        context.quadraticCurveTo(this.right, this.bottom, this.right - radius, this.bottom);
+        context.lineTo(this.x + radius, this.bottom);
+        context.quadraticCurveTo(this.x, this.bottom, this.x, this.bottom - radius);
+        context.lineTo(this.x, this.y + radius);
+        context.quadraticCurveTo(this.x, this.y, this.x + radius, this.y);
+        context.stroke();
+
+        
+
         context.transform(1, 0, 0, 1, 0, 0);
         this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         this.drawSelected(context);
+    }
+
+    drawCardBack(context) {
+        const radius = 12;
+        context.save();
+        context.beginPath();
+        context.lineWidth = "1";
+        context.moveTo(this.x + radius, this.y);
+        context.lineTo(this.right - radius, this.y);
+        context.quadraticCurveTo(this.right, this.y, this.right, this.y + radius);
+        context.lineTo(this.right, this.y + this.height - radius);
+        context.quadraticCurveTo(this.right, this.bottom, this.right - radius, this.bottom);
+        context.lineTo(this.x + radius, this.bottom);
+        context.quadraticCurveTo(this.x, this.bottom, this.x, this.bottom - radius);
+        context.lineTo(this.x, this.y + radius);
+        context.quadraticCurveTo(this.x, this.y, this.x + radius, this.y);
+        context.clip();
+
+        context.drawImage(this.cardBack, this.x, this.y, this.width, this.height);
+
+        context.restore();
     }
 
     drawContent(context) {
@@ -155,7 +184,7 @@ export class Card extends GameObject {
         const context = this.game.ctx;
         const lineHeightMultiplier = 1.25;
 
-        this.fontSize = 400;
+        this.fontSize = 200;
         this.font = `${this.fontSize}px ${this.game.font}`;
         context.font = this.font;
         this.lineHeight = context.measureText("M").width * 1.2;
@@ -165,7 +194,7 @@ export class Card extends GameObject {
 
         while (this.fontTooBig || this.lines.length * this.lineHeight > this.maxTextHeight) {
             this.fontTooBig = false;
-            this.fontSize -= 2;
+            this.fontSize -= Math.ceil(this.fontSize / 50);
             this.font = `${this.fontSize}px ${this.game.font}`;
             context.font = this.font;
 
