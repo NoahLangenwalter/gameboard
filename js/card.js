@@ -16,8 +16,7 @@ export class Card extends GameObject {
         this.maxTextHeight = this.height * 0.8;
         this.maxTextWidth = this.width * 0.8;
 
-        this.#content = content.toString();
-        this.formatContent();
+        this.content = content.toString();
 
         this.animations = {
             flipping: new FlipAnimation(),
@@ -156,7 +155,7 @@ export class Card extends GameObject {
         const context = this.game.ctx;
         const lineHeightMultiplier = 1.25;
 
-        this.fontSize = 100;
+        this.fontSize = 400;
         this.font = `${this.fontSize}px ${this.game.font}`;
         context.font = this.font;
         this.lineHeight = context.measureText("M").width * 1.2;
@@ -166,7 +165,7 @@ export class Card extends GameObject {
 
         while (this.fontTooBig || this.lines.length * this.lineHeight > this.maxTextHeight) {
             this.fontTooBig = false;
-            this.fontSize -= 1;
+            this.fontSize -= 2;
             this.font = `${this.fontSize}px ${this.game.font}`;
             context.font = this.font;
 
