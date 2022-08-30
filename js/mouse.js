@@ -142,7 +142,6 @@ export class Mouse {
             let obj = this.detectTopObject();
             if (obj !== null) {
                 this.startDrag(obj);
-                // this.startDrag(obj);
             }
             else {
                 if (!event.shiftKey) {
@@ -178,7 +177,7 @@ export class Mouse {
             if (clicks === 1) {
                 this.handleLeftClick(event);
             } else if (clicks === 2) {
-                this.handleDoubleClick();
+                this.handleDoubleClick(event);
             }
 
             if (this.dragSelect) {
@@ -222,6 +221,7 @@ export class Mouse {
         if (obj !== null) {
             if (event.ctrlKey) {
                 obj.activate();
+                this.game.selectObject(obj);
             }
             else if (!this.game.isSelected(obj)) {
                 this.game.selectObject(obj, event.shiftKey);
@@ -232,8 +232,13 @@ export class Mouse {
         }
     }
 
-    handleDoubleClick() {
-        this.game.enterEditMode();
+    handleDoubleClick(event) {
+        if (this.game.isSelectionEditable()) {
+            this.game.enterEditMode();
+        }
+        else if (event.ctrlKey === false && this.game.isSelectionShuffleable()) {
+            this.game.selected.forEach(obj => { obj.shuffle() });
+        }
     }
 
     startDrag(object) {

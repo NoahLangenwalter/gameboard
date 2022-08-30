@@ -23,11 +23,21 @@ export class Keyboard {
         if(["LeftControl", "RightControl", "LeftShift", "RightShift"].includes(event.code)) {
             return;
         }
+
+        if(event.code === "KeyS" && event.ctrlKey) {
+            event.preventDefault();
+        }
         
         if (this.game.mode === Mode.Play) {
             if (event.code === "KeyE" && event.ctrlKey) {
                 event.preventDefault();
                 this.game.enterEditMode();
+            }
+
+            if(event.code === "KeyS" && event.ctrlKey) {
+                if(this.mouse.isHovering && this.mouse.hoverTarget.isShuffleable) {
+                    this.mouse.hoverTarget.shuffle();
+                }
             }
         }
         else if (this.game.mode === Mode.Edit) {
@@ -47,6 +57,19 @@ export class Keyboard {
             this.game.editTarget.content += newContent;
         }
     }
+
+    // onKeyUp = (event) => {
+    //     this.key = event.key;
+    //     if(["LeftControl", "RightControl", "LeftShift", "RightShift"].includes(event.code)) {
+    //         return;
+    //     }
+
+    //     if (this.game.mode === Mode.Edit) {
+    //         return;
+    //     }
+
+       
+    // }
 
     keyIsTextCharacter(event) {
         // cosnt ['+', '(', ')', '-', 'ArrowLeft', 'ArrowRight', 'Delete', 'Backspace'].includes(key)

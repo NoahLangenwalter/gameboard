@@ -129,6 +129,20 @@ export class Game {
         return this.editTarget.isEditable && (!(this.editTarget instanceof Card) || this.editTarget.isFaceUp);
     }
 
+    isSelectionShuffleable() {
+        if (this.selected.size === 0) {
+            return false;
+        }
+
+        this.selected.forEach(obj => {
+            if(!obj.isShuffleable) {
+                return false;
+            }
+        });
+
+        return true;
+    }
+
     enterEditMode() {
         if (this.isSelectionEditable()) {
             this.mode = Mode.Edit;

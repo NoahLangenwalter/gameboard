@@ -17,6 +17,7 @@ export class Deck extends GameObject {
         const iconName = this.type === DeckType.DrawPile ? "deckIcon" : "discardIcon";
         this.icon = document.getElementById(iconName);
         this.isCardTarget = true;
+        this.isShuffleable = true;
     }
 
     get isInteractable() { return !this.drawInProgress }
