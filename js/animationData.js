@@ -8,12 +8,9 @@ export class AnimationData {
     get status() { return this._status };
     get duration() { return this._duration }
 
-    start(startValues = null, targetValues = null) {
+    start() {
         this._start = Date.now();
         this._status = true;
-
-        this.startValues = startValues;
-        this.targetValues = targetValues;
     }
 
     end() {

@@ -20,7 +20,7 @@ export class Card extends GameObject {
 
         this.animations = {
             flipping: new FlipAnimation(),
-            playing: new AnimationData(200),
+            playing: new PlayingAnimation(),
         }
         this.isEditable = true;
         this.cardBack = document.getElementById("cardBack");
@@ -54,14 +54,13 @@ export class Card extends GameObject {
             anim.update();
 
             if (anim.elapsed >= anim.duration) {
-                this.y = anim.targetValues[1];
+                this.y = anim.targetY;
                 anim.end();
                 this.deck.handleDrawn();
             }
             else {
-                let diffY = anim.targetValues[1] - anim.startValues[1];
-                let plusY = diffY * anim.elapsedPercent;
-                this.y = anim.startValues[1] + plusY;
+                this.y = anim.currentY;
+                this.x = anim.currentX;
             }
         }
         if (this.animations.flipping.status) {
@@ -138,7 +137,7 @@ export class Card extends GameObject {
         context.quadraticCurveTo(this.x, this.y, this.x + radius, this.y);
         context.stroke();
 
-        
+
 
         context.transform(1, 0, 0, 1, 0, 0);
         this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -291,7 +290,7 @@ export class Card extends GameObject {
         this.x = this.deck.x;
         this.y = this.deck.y;
         this.z = 1000;
-        this.animations.playing.start([this.x, this.y], [this.x, this.y + 30 + this.height]);
+        this.animations.playing.start(this.x, this.y, this.x, this.y + 30 + this.height);
     }
 
     addToDeck = (deck) => {
@@ -308,7 +307,7 @@ export class Card extends GameObject {
     }
 
     flip = () => {
-        this.animations.flipping.start([this.x, this.width, this.isFaceUp]);
+        this.animations.flipping.start(this.x, this.width, this.isFaceUp);
     }
 
     startEdit() {
@@ -338,11 +337,39 @@ class FlipAnimation extends AnimationData {
         this.matrix[4] = (this.x + this.width / 2) * (1 - this.matrix[0]);
     }
 
-    start(startValues, targetValues = null) {
-        super.start(startValues, targetValues);
+    start(x, width, isFaceUp) {
+        super.start();
 
-        this.x = startValues[0];
-        this.width = startValues[1];
-        this.startedFaceUp = startValues[2];
+        this.x = x;
+        this.width = width;
+        this.startedFaceUp = isFaceUp;
+    }
+}
+
+class PlayingAnimation extends AnimationData {
+    constructor() {
+        super(200);
+    }
+    update() {
+        super.update();
+
+        let diffY = this.targetY - this.startY;
+        let plusY = diffY * this.elapsedPercent;
+        this.currentY = this.startY + plusY;
+
+        let diffX = this.targetX - this.startX;
+        let plusX = diffX * this.elapsedPercent;
+        this.currentX = this.startX + plusX;
+    }
+
+    start(startX, startY, targetX, targetY) {
+        super.start();
+
+        this.startX = startX;
+        this.startY = startY;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.currentX = this.startX;
+        this.currentY = this.startY;
     }
 }
