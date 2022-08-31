@@ -146,6 +146,7 @@ export class Game {
     enterEditMode() {
         if (this.isSelectionEditable()) {
             this.mode = Mode.Edit;
+            this.editTarget.z = this.nextZ;
             this.editor.start(this.editTarget);
         }
     }
