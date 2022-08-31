@@ -1,16 +1,15 @@
 import { GameObject } from "./gameObject.js";
 import { AnimationData } from "./animationData.js";
-import { DeckType } from "./deck.js";
 
 export class Card extends GameObject {
-    isFaceUp = true;
     isEditing = false
     deck = null;
     #content = "";
 
-    constructor(game, content = "", startX = 0, startY = 0, startZ = 0) {
+    constructor(game, content = "", isFaceUp = true, startX = 0, startY = 0, startZ = 0) {
         super(game, startX, startY, startZ);
 
+        this.isFaceUp = isFaceUp;
         this.width = 250;
         this.height = 350;
         this.maxTextHeight = this.height * 0.9;
@@ -20,7 +19,7 @@ export class Card extends GameObject {
 
         this.animations = {
             flipping: new FlipAnimation(),
-            playing: new PlayingAnimation(),
+            moving: new MovingAnimation(),
         }
         this.isEditable = true;
         this.cardBack = document.getElementById("cardBack");
@@ -39,7 +38,7 @@ export class Card extends GameObject {
     set y(v) { this._y = v }
     set z(v) { this._z = v }
     get isInteractable() {
-        return !this.animations.flipping.status & !this.animations.playing.status;
+        return !this.animations.flipping.status & !this.animations.moving.status;
     }
     get content() { return this.#content; }
     set content(val) {
@@ -49,14 +48,19 @@ export class Card extends GameObject {
     get lineCount() { return this.lines.length }
 
     update() {
-        if (this.animations.playing.status) {
-            let anim = this.animations.playing;
+        if (this.animations.moving.status) {
+            let anim = this.animations.moving;
             anim.update();
 
             if (anim.elapsed >= anim.duration) {
                 this.y = anim.targetY;
                 anim.end();
-                this.deck.handleDrawn();
+                if (anim.intoDeck) {
+                    this.deck.handleReturn(this);
+                }
+                else {
+                    this.deck.handleDrawn();
+                }
             }
             else {
                 this.y = anim.currentY;
@@ -83,27 +87,11 @@ export class Card extends GameObject {
             let anim = this.animations.flipping;
             context.transform(...anim.matrix);
         }
-        let cR = this.cornerRadius * 2;
-        if (this.dragging || this.animations.playing.status) {
-            context.shadowBlur = 40 * this.game.view.scale;
-            context.shadowOffsetX = 5 * this.game.view.scale;
-            context.shadowOffsetY = 10 * this.game.view.scale;
-        }
-        else {
-            context.shadowBlur = 15 * this.game.view.scale;
-            context.shadowOffsetX = 0
-            context.shadowOffsetY = 0
-        }
-        context.lineWidth = cR;
-        context.shadowColor = "black";
-        context.strokeRect(this.x + (cR / 2) + 5, this.y + (cR / 2) + 5, this.width - cR - 10, this.height - cR - 10);
-        context.shadowBlur = 0;
-        context.shadowOffsetX = 0;
-        context.shadowOffsetY = 0;
 
-        cR = this.cornerRadius;
+        this.drawShadow(context, this.dragging || this.animations.moving.status || this.animations.flipping.status);
+
+        let cR = this.cornerRadius;
         context.strokeStyle = context.fillStyle = this.isFaceUp ? "white" : this.game.colors.dark;
-        // context.strokeStyle = this.game.colors.dark;
         context.lineJoin = "round";
         context.lineWidth = cR;
         context.strokeRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
@@ -137,10 +125,7 @@ export class Card extends GameObject {
         context.quadraticCurveTo(this.x, this.y, this.x + radius, this.y);
         context.stroke();
 
-
-
         context.transform(1, 0, 0, 1, 0, 0);
-        this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         this.drawSelected(context);
     }
@@ -290,16 +275,19 @@ export class Card extends GameObject {
         this.x = this.deck.x;
         this.y = this.deck.y;
         this.z = 1000;
-        this.animations.playing.start(this.x, this.y, this.x, this.y + 30 + this.height);
+        this.animations.moving.start(150, this.x, this.y, this.x, this.y + 30 + this.height);
     }
 
-    addToDeck = (deck) => {
-        this.inDeck = true;
+    addToDeck = (deck, offset = 0) => {
+        this.game.deselectObject(this);
         this.deck = deck;
+        this.animations.moving.start(250, this._x, this._y, this.deck.x, this.deck.y, true);
+
         this.x = this.deck.x;
         this.y = this.deck.y;
-        this.isFaceUp = this.deck.type !== DeckType.DrawPile;
-        //TODO: should this animate? the flipping and moving to the deck's position?
+        if (this.isFaceUp !== this.deck.isFaceUp) {
+            this.flip();
+        }
     }
 
     activate() {
@@ -307,7 +295,7 @@ export class Card extends GameObject {
     }
 
     flip = () => {
-        this.animations.flipping.start(this.x, this.width, this.isFaceUp);
+        this.animations.flipping.start(this, this.width, this.isFaceUp);
     }
 
     startEdit() {
@@ -332,23 +320,23 @@ class FlipAnimation extends AnimationData {
         }
 
         this.matrix[0] = Math.abs(this.elapsedPercent * 2 - 1);
-        this.matrix[1] = 0;//.25 * (1 - this.matrix[0]);
+        this.matrix[1] = 0;
         this.matrix[3] = 1;
-        this.matrix[4] = (this.x + this.width / 2) * (1 - this.matrix[0]);
+        this.matrix[4] = (this.card.x + this.width / 2) * (1 - this.matrix[0]);
     }
 
-    start(x, width, isFaceUp) {
+    start(card, width, isFaceUp) {
         super.start();
 
-        this.x = x;
+        this.card = card;
         this.width = width;
         this.startedFaceUp = isFaceUp;
     }
 }
 
-class PlayingAnimation extends AnimationData {
+class MovingAnimation extends AnimationData {
     constructor() {
-        super(200);
+        super(-1);
     }
     update() {
         super.update();
@@ -362,8 +350,9 @@ class PlayingAnimation extends AnimationData {
         this.currentX = this.startX + plusX;
     }
 
-    start(startX, startY, targetX, targetY) {
+    start(duration, startX, startY, targetX, targetY, intoDeck = false) {
         super.start();
+        this._duration = duration;
 
         this.startX = startX;
         this.startY = startY;
@@ -371,5 +360,6 @@ class PlayingAnimation extends AnimationData {
         this.targetY = targetY;
         this.currentX = this.startX;
         this.currentY = this.startY;
+        this.intoDeck = intoDeck;
     }
 }

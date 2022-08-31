@@ -3,19 +3,23 @@ import { GameObject } from './gameObject.js';
 import { AnimationData } from "./animationData.js";
 
 export class Deck extends GameObject {
+    isFaceUp = false;
     drawInProgress = false;
+    returnsInProgress = 0;
+    returningCards = [];
     empty = true;
 
-    constructor(game, type, numberOfCards, startX = 0, startY = 0, startZ = 0) {
+
+    constructor(game, isFaceUp, numberOfCards, startX = 0, startY = 0, startZ = 0) {
         super(game, startX, startY, startZ);
 
-        this.type = type;
+        this.isFaceUp = isFaceUp;
         this.width = 250;
         this.height = 350;
         this.numberOfCards = numberOfCards;
 
-        const iconName = this.type === DeckType.DrawPile ? "deckIcon" : "discardIcon";
-        this.icon = document.getElementById(iconName);
+        this.faceUpIcon = document.getElementById("faceUpIcon");
+        this.faceDownIcon = document.getElementById("faceDownIcon");
         this.isCardTarget = true;
         this.isShuffleable = true;
 
@@ -26,7 +30,7 @@ export class Deck extends GameObject {
         this.build(numberOfCards);
     }
 
-    get isInteractable() { return !this.drawInProgress && !this.animations.shuffling.status }
+    get isInteractable() { return !this.drawInProgress && this.returnsInProgress === 0 && !this.animations.shuffling.status }
 
     update() {
         if (this.animations.shuffling.status) {
@@ -42,23 +46,39 @@ export class Deck extends GameObject {
 
         this.game.view.apply();
         if (this.dragging) {
-            let cR = this.cornerRadius * 2;
-            context.shadowBlur = 40 * this.game.view.scale;
-            context.shadowOffsetX = 5 * this.game.view.scale;
-            context.shadowOffsetY = 10 * this.game.view.scale;
-            context.lineWidth = cR;
-            context.shadowColor = "black";
-            context.strokeRect(this.x + (cR / 2) + 5, this.y + (cR / 2) + 5, this.width - cR - 10, this.height - cR - 10);
-            context.shadowBlur = 0;
-            context.shadowOffsetX = 0;
-            context.shadowOffsetY = 0;
+            this.drawShadow(context, true);
         }
         if (this.empty) {
-            if (this.type === DeckType.DrawPile) {
-                this.drawAsDrawPile(context);
+            let cR = this.cornerRadius;
+            context.fillStyle = this.game.colors.medium;//"#4a6f71";
+            context.strokeStyle = this.game.colors.medium;//"#4a6f71";
+            // context.fillRect(this.x, this.y, this.width, this.height);
+            context.lineJoin = "round";
+            context.lineWidth = cR;
+            context.strokeRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
+            context.fillRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
+
+            context.strokeStyle = "black";
+            context.lineWidth = 15;
+
+            if (this.isFaceUp) {
+                context.strokeStyle = "black";
+                context.lineWidth = 15;
+                let radius = 60;
+                const center = { x: this.x + this.width / 2, y: this.y + this.height / 2 };
+                context.beginPath();
+                context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+                context.stroke();
             }
             else {
-                this.drawAsDiscardPile(context);
+                context.beginPath();
+                context.moveTo(this.x + 60, this.y + 120);
+                context.lineTo(this.x + this.width - 60, this.y + this.height - 120);
+                context.stroke();
+                context.beginPath();
+                context.moveTo(this.x + 60, this.y + this.height - 120);
+                context.lineTo(this.x + this.width - 60, this.y + 120);
+                context.stroke();
             }
         }
         else {
@@ -89,48 +109,8 @@ export class Deck extends GameObject {
         context.stroke();
 
         let iconSize = radius * 1.25;
-        context.drawImage(this.icon, center.x - iconSize / 2, center.y - iconSize / 2, iconSize, iconSize);
-    }
-
-    drawAsDrawPile(context) {
-        let cR = this.cornerRadius;
-        context.fillStyle = this.game.colors.medium;//"#4a6f71";
-        context.strokeStyle = this.game.colors.medium;//"#4a6f71";
-        // context.fillRect(this.x, this.y, this.width, this.height);
-        context.lineJoin = "round";
-        context.lineWidth = cR;
-        context.strokeRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
-        context.fillRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
-
-        context.strokeStyle = "black";
-        context.lineWidth = 15;
-        context.beginPath();
-        context.moveTo(this.x + 60, this.y + 120);
-        context.lineTo(this.x + this.width - 60, this.y + this.height - 120);
-        context.stroke();
-        context.beginPath();
-        context.moveTo(this.x + 60, this.y + this.height - 120);
-        context.lineTo(this.x + this.width - 60, this.y + 120);
-        context.stroke();
-    }
-
-    drawAsDiscardPile(context) {
-        let cR = this.cornerRadius;
-        context.fillStyle = this.game.colors.medium;//"#4a6f71";
-        context.strokeStyle = this.game.colors.medium;//"#4a6f71";
-        // context.fillRect(this.x, this.y, this.width, this.height);
-        context.lineJoin = "round";
-        context.lineWidth = cR;
-        context.strokeRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
-        context.fillRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
-
-        context.strokeStyle = "black";
-        context.lineWidth = 15;
-        let radius = 60;
-        const center = { x: this.x + this.width / 2, y: this.y + this.height / 2 };
-        context.beginPath();
-        context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
-        context.stroke();
+        const icon = this.isFaceUp ? this.faceUpIcon : this.faceDownIcon;
+        context.drawImage(icon, center.x - iconSize / 2, center.y - iconSize / 2, iconSize, iconSize);
     }
 
     activate() {
@@ -143,15 +123,16 @@ export class Deck extends GameObject {
         }
     }
 
+    flip = () => {
+        this.animations.flipping.start(this.x, this.width, this.isFaceUp);
+    }
+
     drawCard = () => {
         if (this.cards.length > 0) {
             let drawn = this.cards.shift();
 
             this.game.addObject(drawn);
             drawn.play();
-            if (this.type === DeckType.DrawPile) {
-                drawn.flip();
-            }
 
             this.drawInProgress = true;
         }
@@ -161,14 +142,19 @@ export class Deck extends GameObject {
         }
     }
 
-    returnCard = (card) => {
-        card.addToDeck(this);
-        //adds to top;
-        this.cards.unshift(card);
-        this.game.removeObject(card);
-        this.game.deselectObject(card);
+    returnCard = (card, offset=0) => {
+        this.returnsInProgress++;
+        card.addToDeck(this, offset);
+    }
 
-        this.empty = this.cards.length === 0;
+    returnCards = (cards) => {
+        this.returningCards = cards;
+        this.returningCards.sort(this.game.sortByZ);
+
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            this.returnCard(card, (cards.length-i)*10);
+        }
     }
 
     build = (numberOfCards) => {
@@ -186,13 +172,23 @@ export class Deck extends GameObject {
     handleDrawn = () => {
         this.drawInProgress = false;
     }
-}
 
-export const DeckType = {
-    DrawPile: 'DrawPile',
-    DiscardPile: 'DiscardPile',
-    Stack: 'Stack',
-};
+    handleReturn = (card) => {
+        this.returnsInProgress--;
+
+        if(this.returnsInProgress === 0) {
+            this.returningCards.forEach(card => {
+                //adds to top;
+                card.inDeck = true;
+                this.cards.unshift(card);
+                this.game.removeObject(card);
+                this.game.deselectObject(card);
+            });
+
+            this.empty = this.cards.length === 0;
+        }
+    }
+}
 
 class ShuffleAnimation extends AnimationData {
     constructor() {

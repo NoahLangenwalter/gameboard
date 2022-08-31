@@ -221,9 +221,9 @@ export class Mouse {
         if (obj !== null) {
             if (event.ctrlKey) {
                 obj.activate();
-                this.game.selectObject(obj);
             }
-            else if (!this.game.isSelected(obj)) {
+
+            if (!this.game.isSelected(obj)) {
                 this.game.selectObject(obj, event.shiftKey);
             }
             else if (event.shiftKey) {
@@ -289,11 +289,13 @@ export class Mouse {
         }
 
         if (this.isHovering && this.#hovering.isCardTarget) {
+            const cards = [];
             for (const dragee of this.#dragging.values()) {
                 if (dragee.obj instanceof Card) {
-                    this.#hovering.returnCard(dragee.obj);
+                    cards.push(dragee.obj);
                 }
             }
+            this.#hovering.returnCards(cards);
         }
         this.#dragging.clear();
     }

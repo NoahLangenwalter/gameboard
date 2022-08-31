@@ -28,16 +28,20 @@ export class Game {
         return this.selected.values().next().value;
     }
 
+    sortByZ(a, b) {
+        return a.z > b.z ? 1 : -1;
+    };
+
     update() {
-        this.objects.sort((a, b) => {
-            return a.z > b.z ? 1 : -1;
-        });
+        this.objects.sort(this.sortByZ);
 
         for (let i = 0; i < this.objects.length; i++) {
             this.objects[i].z = i;
             this.objects[i].update();
             this.#nextZ = i + 1;
         }
+
+        // this.selected.sort(this.sortByZ);
 
         // info.textContent = "Scale: " + this.view.scale.toFixed(4) + " (1px = " + (1 / this.view.scale).toFixed(4) + " world px) - ";
         // info.textContent += "Offset: " + this.view.offset.x.toFixed(2) + "," + this.view.offset.x.toFixed(2) + " - ";
@@ -134,11 +138,11 @@ export class Game {
             return false;
         }
 
-        this.selected.forEach(obj => {
-            if(!obj.isShuffleable) {
+        for (const obj of this.selected.values()) {
+            if (!obj.isShuffleable) {
                 return false;
             }
-        });
+        }
 
         return true;
     }
