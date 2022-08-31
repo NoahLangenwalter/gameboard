@@ -22,30 +22,58 @@ export class Keyboard {
 
     onKeyDown = (event) => {
         this.key = event.key;
-        if(this.ignored.includes(event.code)) {
+        if (this.ignored.includes(event.code)) {
             return;
         }
 
-        if(event.ctrlKey && this.reservedCombos.includes(event.code)) {
+        if (event.ctrlKey && this.reservedCombos.includes(event.code)) {
             event.preventDefault();
         }
-        
+
         if (this.game.mode === Mode.Play) {
             if (event.code === "KeyE" && event.ctrlKey) {
                 event.preventDefault();
                 this.game.enterEditMode();
             }
-            else if(event.code === "KeyS" && event.ctrlKey) {
-                if(this.mouse.isHovering && this.mouse.hoverTarget.isShuffleable) {
-                    this.mouse.hoverTarget.shuffle();
-                }
+            else if (event.code === "KeyS" && event.ctrlKey) {
+                this.shuffleValidTargets();
             }
-            else if(event.code === "KeyF" && event.ctrlKey) {
-                if(this.mouse.isHovering) { //isFlippable
-                    this.mouse.hoverTarget.flip();
-                }
+            else if (event.code === "KeyF" && event.ctrlKey) {
+                this.flipValidTargets();
             }
         }
+    }
+
+    flipValidTargets() {
+        const targets = this.getActionTargets();
+
+        for (let i = 0; i < targets.length; i++) {
+            if (targets[i].isFlippable) {
+                targets[i].flip();
+            }
+        }
+    }
+
+    shuffleValidTargets() {
+        const targets = this.getActionTargets();
+
+        for (let i = 0; i < targets.length; i++) {
+            if (targets[i].isShuffleable) {
+                targets[i].shuffle();
+            }
+        }
+    }
+
+    getActionTargets(action) {
+        let targets = [];
+        if (this.mouse.isHovering && !this.game.isSelected(this.mouse.hoverTarget)) {
+            targets.push(this.mouse.hoverTarget);
+        }
+        else {
+            targets = Array.from(this.game.selected);
+        }
+        
+        return targets;
     }
 
     // onKeyUp = (event) => {
@@ -58,6 +86,6 @@ export class Keyboard {
     //         return;
     //     }
 
-       
+
     // }
 }

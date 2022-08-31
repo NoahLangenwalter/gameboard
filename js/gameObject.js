@@ -8,6 +8,7 @@ export class GameObject {
     isCardTarget = false;
     isEditable = false;
     isShuffleable = false;
+    isFlippable = true;
 
     constructor(game, startX = 0, startY = 0, startZ = -1) {
         this.game = game;

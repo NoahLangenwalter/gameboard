@@ -24,7 +24,7 @@ export class Deck extends GameObject {
         this.isShuffleable = true;
 
         this.animations = {
-            flipping: new FlipAnimation(),
+            flipping: new FlipAnimation(150),
             shuffling: new ShuffleAnimation()
         };
 
@@ -45,9 +45,6 @@ export class Deck extends GameObject {
 
             if (anim.elapsed >= anim.duration) {
                 anim.end();
-                if (!this.empty) {
-                    this.cards[this.cards.length - 1].animations.flipping.end();
-                }
             }
         }
 
@@ -58,8 +55,8 @@ export class Deck extends GameObject {
             this.cards = anim.cards;
         }
 
-        if (!this.empty) {
-            this.cards[0].update();
+        if (!this.empty && this.flipper) {
+            this.flipper.update();
         }
     }
 
@@ -152,7 +149,8 @@ export class Deck extends GameObject {
 
     flip = () => {
         if (!this.empty) {
-            this.cards[0].flip();
+            this.flipper = this.cards[0];
+            this.flipper.flip();
         }
         this.animations.flipping.start(this, this.width, this.isFaceUp);
     }

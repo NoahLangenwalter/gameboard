@@ -314,8 +314,8 @@ export class Card extends GameObject {
 }
 
 export class FlipAnimation extends AnimationData {
-    constructor() {
-        super(150);
+    constructor(duration = 150) {
+        super(duration);
         this.matrix = [1, 0, 0, 1, 0, 0];
     }
     update() {
