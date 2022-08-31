@@ -34,10 +34,6 @@ export class Deck extends GameObject {
             anim.update();
 
             this.cards = anim.cards;
-
-            if (anim.elapsed >= anim.duration) {
-                anim.end();
-            }
         }
     }
 
@@ -142,7 +138,9 @@ export class Deck extends GameObject {
     }
 
     shuffle = () => {
-        this.animations.shuffling.start(this.x, this.y, this.cards);
+        if (this.cards.length > 1) {
+            this.animations.shuffling.start(this.x, this.y, this.cards);
+        }
     }
 
     drawCard = () => {
@@ -198,16 +196,16 @@ export const DeckType = {
 
 class ShuffleAnimation extends AnimationData {
     constructor() {
-        super(380);
-        this.gravity = 4;
+        super(-1);
+        this.gravity = 1;
+        this.startSpeed = 10;
     }
     update() {
-        super.update();
-
         if (this.speed < 0) {
             this.cards = this.shuffledCards;
         }
 
+        let returned = 0;
         for (let i = 0; i < this._cards.length; i++) {
             const card = this._cards[i];
             const vector = this.cardVectors[i];
@@ -223,16 +221,21 @@ class ShuffleAnimation extends AnimationData {
             else {
                 card.x = this.deckX;
                 card.y = this.deckY;
+                returned++;
             }
         }
 
         this.speed -= this.gravity;
+
+        if (returned === this._cards.length) {
+            this.end();
+        }
     }
 
     start(deckX, deckY, cards) {
         super.start();
 
-        this.speed = 40;
+        this.speed = this.startSpeed;
 
         this.deckX = deckX;
         this.deckY = deckY;
@@ -246,14 +249,15 @@ class ShuffleAnimation extends AnimationData {
 
         this.cardVectors = [];
         this._cards.forEach(card => {
-            card.inDeck = false;
+            card.shuffling = true;
             card.x = this.deckX;
             card.y = this.deckY;
-            const x = (Math.random() * 2 - 1);
+            const x = (Math.random() * 1.5 - .75);
             const y = (Math.random() * 2 - 1);
             this.cardVectors.push({ x, y });
         });
 
+        this.cardVectors[0].y = 3;
         if (this.topCard !== this.newTopCard) {
             const topVector = this.cardVectors[0];
             const newI = this._cards.indexOf(this.newTopCard);
@@ -265,9 +269,7 @@ class ShuffleAnimation extends AnimationData {
         super.end();
 
         this._cards.forEach(card => {
-            card.x = this.deckX;
-            card.y = this.deckY;
-            card.inDeck = true;
+            card.shuffling = false;
         });
     }
 

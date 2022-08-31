@@ -17,9 +17,6 @@ export class AnimationData {
         this._start = null;
         this._status = false;
         this._currentTime = null;
-        
-        this.startValues = null;
-        this.targetValues = null;
     }
     update() {
         this._currentTime = Date.now();

@@ -27,13 +27,13 @@ export class Card extends GameObject {
     }
 
     get x() {
-        return this.inDeck ? this.deck.x : this._x;
+        return this.inDeck && !this.shuffling ? this.deck.x : this._x;
     }
     get y() {
-        return this.inDeck ? this.deck.y : this._y;
+        return this.inDeck && !this.shuffling ? this.deck.y : this._y;
     }
     get z() {
-        return this.inDeck ? this.deck.z : this._z;
+        return this.inDeck && !this.shuffling ? this.deck.z : this._z;
     }
     set x(v) { this._x = v }
     set y(v) { this._y = v }
