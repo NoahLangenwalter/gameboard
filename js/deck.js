@@ -45,6 +45,9 @@ export class Deck extends GameObject {
 
             if (anim.elapsed >= anim.duration) {
                 anim.end();
+                if (!this.empty) {
+                    this.cards[this.cards.length - 1].animations.flipping.end();
+                }
             }
         }
 
@@ -53,6 +56,10 @@ export class Deck extends GameObject {
             anim.update();
 
             this.cards = anim.cards;
+        }
+
+        if (!this.empty) {
+            this.cards[0].update();
         }
     }
 
@@ -144,8 +151,13 @@ export class Deck extends GameObject {
     }
 
     flip = () => {
+        if (!this.empty) {
+            this.cards[0].flip();
+        }
         this.animations.flipping.start(this, this.width, this.isFaceUp);
     }
+
+
 
     drawCard = () => {
         if (this.cards.length > 0) {
@@ -219,8 +231,8 @@ export class Deck extends GameObject {
 class ShuffleAnimation extends AnimationData {
     constructor() {
         super(-1);
-        this.gravity = 1;
-        this.startSpeed = 10;
+        this.gravity = 2;
+        this.startSpeed = 15;
     }
     update() {
         if (this.speed < 0) {
@@ -280,11 +292,14 @@ class ShuffleAnimation extends AnimationData {
         });
 
         this.cardVectors[0].y = 3;
-        if (this.topCard !== this.newTopCard) {
-            const topVector = this.cardVectors[0];
-            const newI = this._cards.indexOf(this.newTopCard);
-            this.cardVectors[newI] = { x: -topVector.x, y: -topVector.y };
+        let opposedCard = this.newTopCard;
+        if (this.topCard === this.newTopCard) {
+            opposedCard = this.shuffledCards[1];
         }
+
+        const topVector = this.cardVectors[0];
+        const newI = this._cards.indexOf(opposedCard);
+        this.cardVectors[newI] = { x: -topVector.x, y: -topVector.y };
     }
 
     end() {
@@ -292,6 +307,7 @@ class ShuffleAnimation extends AnimationData {
 
         this._cards.forEach(card => {
             card.shuffling = false;
+            card.animations.flipping.end();
         });
     }
 
