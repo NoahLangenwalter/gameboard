@@ -3,11 +3,13 @@ import { Mode } from "./game.js";
 
 export class Keyboard {
     key;
+    reservedCombos = ["KeyS", "KeyF", "KeyE"];
+    ignored = ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight"];
     constructor(game, mouse) {
         this.game = game;
         this.mouse = mouse;
 
-        this.game.canvas.addEventListener("keydown", this.onKeyDown);
+        window.addEventListener("keydown", this.onKeyDown);
         // this.game.canvas.addEventListener("keyup", this.onKeyUp);
     }
 
@@ -20,11 +22,11 @@ export class Keyboard {
 
     onKeyDown = (event) => {
         this.key = event.key;
-        if(["LeftControl", "RightControl", "LeftShift", "RightShift"].includes(event.code)) {
+        if(this.ignored.includes(event.code)) {
             return;
         }
 
-        if(event.code === "KeyS" && event.ctrlKey) {
+        if(event.ctrlKey && this.reservedCombos.includes(event.code)) {
             event.preventDefault();
         }
         
@@ -33,29 +35,33 @@ export class Keyboard {
                 event.preventDefault();
                 this.game.enterEditMode();
             }
-
-            if(event.code === "KeyS" && event.ctrlKey) {
+            else if(event.code === "KeyS" && event.ctrlKey) {
                 if(this.mouse.isHovering && this.mouse.hoverTarget.isShuffleable) {
                     this.mouse.hoverTarget.shuffle();
                 }
             }
+            else if(event.code === "KeyF" && event.ctrlKey) {
+                if(this.mouse.isHovering) { //isFlippable
+                    this.mouse.hoverTarget.activate();
+                }
+            }
         }
-        else if (this.game.mode === Mode.Edit) {
-            let newContent = "";
-            if (event.key === "Backspace") {
-                this.game.editTarget.content = this.game.editTarget.content.slice(0, -1);
-                return;
-            }
+        // else if (this.game.mode === Mode.Edit) {
+        //     let newContent = "";
+        //     if (event.key === "Backspace") {
+        //         this.game.editTarget.content = this.game.editTarget.content.slice(0, -1);
+        //         return;
+        //     }
 
-            if (this.keyIsTextCharacter(event)) {
-                newContent = event.key;
-            }
-            else if (event.key === "Enter") {
-                newContent = "\n"
-            }
+        //     if (this.keyIsTextCharacter(event)) {
+        //         newContent = event.key;
+        //     }
+        //     else if (event.key === "Enter") {
+        //         newContent = "\n"
+        //     }
 
-            this.game.editTarget.content += newContent;
-        }
+        //     this.game.editTarget.content += newContent;
+        // }
     }
 
     // onKeyUp = (event) => {
