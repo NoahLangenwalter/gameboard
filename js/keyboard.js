@@ -42,26 +42,10 @@ export class Keyboard {
             }
             else if(event.code === "KeyF" && event.ctrlKey) {
                 if(this.mouse.isHovering) { //isFlippable
-                    this.mouse.hoverTarget.activate();
+                    this.mouse.hoverTarget.flip();
                 }
             }
         }
-        // else if (this.game.mode === Mode.Edit) {
-        //     let newContent = "";
-        //     if (event.key === "Backspace") {
-        //         this.game.editTarget.content = this.game.editTarget.content.slice(0, -1);
-        //         return;
-        //     }
-
-        //     if (this.keyIsTextCharacter(event)) {
-        //         newContent = event.key;
-        //     }
-        //     else if (event.key === "Enter") {
-        //         newContent = "\n"
-        //     }
-
-        //     this.game.editTarget.content += newContent;
-        // }
     }
 
     // onKeyUp = (event) => {
@@ -76,9 +60,4 @@ export class Keyboard {
 
        
     // }
-
-    keyIsTextCharacter(event) {
-        // cosnt ['+', '(', ')', '-', 'ArrowLeft', 'ArrowRight', 'Delete', 'Backspace'].includes(key)
-        if (event.code.startsWith("Key") || event.code.startsWith("Digit") || event.key === " ") { return true; }
-    }
 }

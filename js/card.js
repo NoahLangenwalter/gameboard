@@ -5,6 +5,7 @@ export class Card extends GameObject {
     isEditing = false
     deck = null;
     #content = "";
+    #isFaceUp = true;
 
     constructor(game, content = "", isFaceUp = true, startX = 0, startY = 0, startZ = 0) {
         super(game, startX, startY, startZ);
@@ -37,8 +38,13 @@ export class Card extends GameObject {
     set x(v) { this._x = v }
     set y(v) { this._y = v }
     set z(v) { this._z = v }
+    get isFaceUp() {
+        return this.inDeck ? this.deck.isFaceUp : this.#isFaceUp;
+    }
+    set isFaceUp(v) { this.#isFaceUp = v }
     get isInteractable() {
-        return !this.animations.flipping.status & !this.animations.moving.status;
+        return !this.animations.flipping.status
+            && !this.animations.moving.status;
     }
     get content() { return this.#content; }
     set content(val) {
@@ -48,6 +54,15 @@ export class Card extends GameObject {
     get lineCount() { return this.lines.length }
 
     update() {
+        if (this.animations.flipping.status) {
+            let anim = this.animations.flipping;
+            anim.update();
+
+            if (anim.elapsed >= anim.duration) {
+                anim.end();
+            }
+        }
+
         if (this.animations.moving.status) {
             let anim = this.animations.moving;
             anim.update();
@@ -65,16 +80,6 @@ export class Card extends GameObject {
             else {
                 this.y = anim.currentY;
                 this.x = anim.currentX;
-            }
-        }
-        if (this.animations.flipping.status) {
-            let anim = this.animations.flipping;
-            anim.update();
-
-            this.isFaceUp = anim.isFaceUp;
-
-            if (anim.elapsed >= anim.duration) {
-                anim.end();
             }
         }
     }
@@ -98,10 +103,7 @@ export class Card extends GameObject {
         context.fillRect(this.x + (cR / 2), this.y + (cR / 2), this.width - cR, this.height - cR);
 
         if (this.isFaceUp) {
-            if (this.isEditing) {
-
-            }
-            else {
+            if (!this.isEditing) {
                 this.drawContent(context);
             }
         }
@@ -305,9 +307,13 @@ export class Card extends GameObject {
     endEdit() {
         this.isEditing = false;
     }
+
+    handleFlipMidpoint(isFaceUp) {
+        this.isFaceUp = isFaceUp;
+    }
 }
 
-class FlipAnimation extends AnimationData {
+export class FlipAnimation extends AnimationData {
     constructor() {
         super(150);
         this.matrix = [1, 0, 0, 1, 0, 0];
@@ -317,18 +323,24 @@ class FlipAnimation extends AnimationData {
 
         if (this.elapsedPercent > .5) {
             this.isFaceUp = !this.startedFaceUp;
+
+            if(!this.flipped) {
+                this.flipped = true;
+                this.obj.handleFlipMidpoint(this.isFaceUp);
+            }
         }
 
         this.matrix[0] = Math.abs(this.elapsedPercent * 2 - 1);
         this.matrix[1] = 0;
         this.matrix[3] = 1;
-        this.matrix[4] = (this.card.x + this.width / 2) * (1 - this.matrix[0]);
+        this.matrix[4] = (this.obj.x + this.width / 2) * (1 - this.matrix[0]);
     }
 
-    start(card, width, isFaceUp) {
+    start(obj, width, isFaceUp) {
         super.start();
 
-        this.card = card;
+        this.flipped = false;
+        this.obj = obj;
         this.width = width;
         this.startedFaceUp = isFaceUp;
     }

@@ -65,7 +65,7 @@ export class GameObject {
 
     drawHighlight(context) {
         if (this.hovering) {
-            this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+            context.setTransform(1, 0, 0, 1, 0, 0);
             const hR = 20;
             const anchor = this.game.view.applyTransformTo(this.x, this.y);
             context.strokeStyle = this.game.colors.highlight;
@@ -79,7 +79,7 @@ export class GameObject {
 
     drawSelected(context) {
         if (this.selected) {
-            this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+            context.setTransform(1, 0, 0, 1, 0, 0);
             const hR = 20;
             const scaledHR = hR * this.game.view.scale;
             const anchor = this.game.view.applyTransformTo(this.x, this.y);

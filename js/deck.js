@@ -1,4 +1,4 @@
-import { Card } from './card.js';
+import { Card, FlipAnimation } from './card.js';
 import { GameObject } from './gameObject.js';
 import { AnimationData } from "./animationData.js";
 
@@ -24,15 +24,30 @@ export class Deck extends GameObject {
         this.isShuffleable = true;
 
         this.animations = {
+            flipping: new FlipAnimation(),
             shuffling: new ShuffleAnimation()
         };
 
         this.build(numberOfCards);
     }
 
-    get isInteractable() { return !this.drawInProgress && this.returnsInProgress === 0 && !this.animations.shuffling.status }
+    get isInteractable() {
+        return !this.drawInProgress
+            && this.returnsInProgress === 0
+            && !this.animations.flipping.status
+            && !this.animations.shuffling.status
+    }
 
     update() {
+        if (this.animations.flipping.status) {
+            let anim = this.animations.flipping;
+            anim.update();
+
+            if (anim.elapsed >= anim.duration) {
+                anim.end();
+            }
+        }
+
         if (this.animations.shuffling.status) {
             let anim = this.animations.shuffling;
             anim.update();
@@ -45,6 +60,11 @@ export class Deck extends GameObject {
         this.drawHighlight(context);
 
         this.game.view.apply();
+        if (this.animations.flipping.status) {
+            let anim = this.animations.flipping;
+            context.transform(...anim.matrix);
+        }
+
         if (this.dragging) {
             this.drawShadow(context, true);
         }
@@ -97,7 +117,7 @@ export class Deck extends GameObject {
         this.drawSelected(context);
 
         // deck icon overlay
-        this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        context.setTransform(1, 0, 0, 1, 0, 0);
         let radius = 21 - (.5 / this.game.view.scale);
         const center = this.game.view.applyTransformTo(this.right - radius, this.bottom - radius);
         context.beginPath();
@@ -124,12 +144,13 @@ export class Deck extends GameObject {
     }
 
     flip = () => {
-        this.animations.flipping.start(this.x, this.width, this.isFaceUp);
+        this.animations.flipping.start(this, this.width, this.isFaceUp);
     }
 
     drawCard = () => {
         if (this.cards.length > 0) {
             let drawn = this.cards.shift();
+            drawn.isFaceUp = this.isFaceUp;
 
             this.game.addObject(drawn);
             drawn.play();
@@ -142,7 +163,7 @@ export class Deck extends GameObject {
         }
     }
 
-    returnCard = (card, offset=0) => {
+    returnCard = (card, offset = 0) => {
         this.returnsInProgress++;
         card.addToDeck(this, offset);
     }
@@ -153,7 +174,7 @@ export class Deck extends GameObject {
 
         for (let i = 0; i < cards.length; i++) {
             const card = cards[i];
-            this.returnCard(card, (cards.length-i)*10);
+            this.returnCard(card, (cards.length - i) * 10);
         }
     }
 
@@ -176,7 +197,7 @@ export class Deck extends GameObject {
     handleReturn = (card) => {
         this.returnsInProgress--;
 
-        if(this.returnsInProgress === 0) {
+        if (this.returnsInProgress === 0) {
             this.returningCards.forEach(card => {
                 //adds to top;
                 card.inDeck = true;
@@ -187,6 +208,11 @@ export class Deck extends GameObject {
 
             this.empty = this.cards.length === 0;
         }
+    }
+
+    handleFlipMidpoint(isFaceUp) {
+        this.isFaceUp = isFaceUp;
+        this.cards.reverse();
     }
 }
 
