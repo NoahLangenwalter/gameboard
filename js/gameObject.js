@@ -95,6 +95,29 @@ export class GameObject {
         }
     }
 
+    drawShadow(context, dragging = false) {
+        let cR = this.cornerRadius * 2;
+        context.lineWidth = cR;
+        context.shadowColor = "black"; //"rgba(0,0,0,.5)";
+
+        if(dragging) {
+            context.shadowBlur = 40 * this.game.view.scale;
+            context.shadowOffsetX = 5 * this.game.view.scale;
+            context.shadowOffsetY = 10 * this.game.view.scale;
+        }
+        else {
+            context.shadowBlur = 15 * this.game.view.scale;
+            context.shadowOffsetX = 0
+            context.shadowOffsetY = 0
+        }
+
+        context.strokeRect(this.x + (cR / 2) + 5, this.y + (cR / 2) + 5, this.width - cR - 10, this.height - cR - 10);
+        context.shadowBlur = 0;
+        context.shadowOffsetX = 0;
+        context.shadowOffsetY = 0;
+    }
+    
+
     draw(context) {
         this.drawHighlight(context);
 
