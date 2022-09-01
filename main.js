@@ -26,7 +26,6 @@ window.onload = function () {
 
         game.draw();
         mouse.draw();
-        keyboard.update();
 
         requestAnimationFrame(animate);
     }

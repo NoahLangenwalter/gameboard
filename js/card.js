@@ -68,6 +68,7 @@ export class Card extends GameObject {
             anim.update();
 
             if (anim.elapsed >= anim.duration) {
+                this.x = anim.targetX;
                 this.y = anim.targetY;
                 anim.end();
                 if (anim.intoDeck) {
@@ -272,12 +273,16 @@ export class Card extends GameObject {
         return textWidth < this.maxTextWidth;
     }
 
-    play = () => {
+    play = (targetPosition = null) => {
+        if(targetPosition === null) {
+            targetPosition = {x: this.x, y: this.y + 30 + this.height};
+        }
+
         this.inDeck = false;
         this.x = this.deck.x;
         this.y = this.deck.y;
         this.z = 1000;
-        this.animations.moving.start(150, this.x, this.y, this.x, this.y + 30 + this.height);
+        this.animations.moving.start(150, this.x, this.y, targetPosition.x, targetPosition.y);
     }
 
     addToDeck = (deck, offset = 0) => {
@@ -373,5 +378,9 @@ class MovingAnimation extends AnimationData {
         this.currentX = this.startX;
         this.currentY = this.startY;
         this.intoDeck = intoDeck;
+    }
+
+    end() {
+        super.end();
     }
 }

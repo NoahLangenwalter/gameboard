@@ -157,13 +157,13 @@ export class Deck extends GameObject {
 
 
 
-    drawCard = () => {
+    drawCard = (targetPosition = null) => {
         if (this.cards.length > 0) {
             let drawn = this.cards.shift();
             drawn.isFaceUp = this.isFaceUp;
 
             this.game.addObject(drawn);
-            drawn.play();
+            drawn.play(targetPosition);
 
             this.drawInProgress = true;
         }

@@ -3,7 +3,7 @@ import { Mode } from "./game.js";
 
 export class Keyboard {
     key;
-    reservedCombos = ["KeyS", "KeyF", "KeyE"];
+    reservedCombos = ["KeyS", "KeyF", "KeyE", "KeyD"];
     ignored = ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight"];
     constructor(game, mouse) {
         this.game = game;
@@ -41,6 +41,9 @@ export class Keyboard {
             else if (event.code === "KeyF" && event.ctrlKey) {
                 this.flipValidTargets();
             }
+            else if (event.code === "KeyD" && event.ctrlKey) {
+                this.drawFromTarget();
+            }
         }
     }
 
@@ -64,7 +67,28 @@ export class Keyboard {
         }
     }
 
-    getActionTargets(action) {
+    drawFromTarget() {
+        let targetDeck = null;
+        if (this.mouse.isHovering && this.mouse.hoverTarget.isCardTarget) {
+            targetDeck = this.mouse.hoverTarget;
+        }
+        else if (this.game.selected.size === 1) {
+            targetDeck = this.game.editTarget;
+        }
+
+        if (targetDeck !== null && targetDeck.isCardTarget) {
+            let endPos = null;
+            if (!(this.mouse.isHovering && targetDeck === this.mouse.hoverTarget)) {
+                endPos = this.game.view.toWorld(this.mouse.x, this.mouse.y);
+                endPos.x -= targetDeck.width / 2;
+                endPos.y -= targetDeck.height / 2;
+            }
+
+            targetDeck.drawCard(endPos);
+        }
+    }
+
+    getActionTargets() {
         let targets = [];
         if (this.mouse.isHovering && !this.game.isSelected(this.mouse.hoverTarget)) {
             targets.push(this.mouse.hoverTarget);
@@ -72,7 +96,7 @@ export class Keyboard {
         else {
             targets = Array.from(this.game.selected);
         }
-        
+
         return targets;
     }
 
