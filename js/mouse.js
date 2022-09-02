@@ -66,6 +66,7 @@ export class Mouse {
 
             context.lineWidth = 4;
             context.lineCap = "round";
+            context.strokeStyle = "black";
             context.beginPath();
             context.moveTo(x - size / 2, y);
             context.lineTo(x + size / 2, y);
