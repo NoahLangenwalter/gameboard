@@ -3,6 +3,8 @@ import { Deck } from "./js/deck.js";
 import { Game } from "./js/game.js";
 import { Mouse } from "./js/mouse.js";
 import { Keyboard } from "./js/keyboard.js";
+import { Create } from "./js/create.js";
+
 
 window.onload = function () {
 
@@ -11,7 +13,8 @@ window.onload = function () {
     boardCanvas.width = window.innerWidth;
     boardCanvas.height = window.innerHeight;
     const game = new Game(boardCanvas, ctx);
-    const mouse = new Mouse(game);
+    const create = new Create(game);
+    const mouse = new Mouse(game, create);
     const keyboard = new Keyboard(game, mouse);
 
     function animate() {
@@ -28,12 +31,6 @@ window.onload = function () {
         mouse.draw();
 
         requestAnimationFrame(animate);
-    }
-
-    function resize(event) {
-        boardCanvas.width = window.innerWidth;
-        boardCanvas.height = window.innerHeight;
-        // game.view.scaleAt({ x: 0, y: 0 }, 1);
     }
 
     function startGame() {
@@ -53,8 +50,11 @@ window.onload = function () {
     }
 
     function loadPlayingCards() {
-        const discard = new Deck(game, true, 0, 650, 250, 0);
-        const drawPile = new Deck(game, false, 0, 250, 250, 1)
+        const centerPos = game.view.toWorld(window.innerWidth / 2, window.innerHeight / 2);
+        centerPos.x -= 250 / 2;
+        centerPos.y -= 350 / 2
+        const drawPile = new Deck(game, false, 0, centerPos.x, centerPos.y, 1)
+        game.addObject(drawPile);
 
         const suits = ["❤️", "♠️", "🔶", "♣️"];
         const values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
@@ -64,20 +64,18 @@ window.onload = function () {
         suits.forEach(suit => {
             values.forEach(value => {
                 const content = value + "\n" + suit;
-                const card = new Card(game, content, false);
+                const card = new Card(game, content, false, centerPos.x, centerPos.y);
                 cards.push(card);
                 game.addObject(card);
-
             });
         });
 
         drawPile.returnCards(cards);
-        game.addObject(discard);
-        game.addObject(drawPile);
+    }
 
-        setTimeout(() => {
-            drawPile.shuffle();
-        }, 350);
+    function resize() {
+        boardCanvas.width = window.innerWidth;
+        boardCanvas.height = window.innerHeight;
     }
 
     window.addEventListener("resize", resize);

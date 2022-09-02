@@ -17,8 +17,9 @@ export class Mouse {
     dragSelect = false;
     dragSelectStart = { x: 0, y: 0 };
     dragTimeout = null;
-    constructor(game) {
+    constructor(game, create) {
         this.game = game;
+        this.create = create;
 
         game.canvas.addEventListener("mousedown", this.onMouseEvent, { passive: true });
         game.canvas.addEventListener("mouseup", this.onMouseEvent, { passive: true });
@@ -36,9 +37,10 @@ export class Mouse {
     }
 
     draw() {
+        const context = this.game.ctx;
+        this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        
         if (this.dragSelect) {
-            const context = this.game.ctx;
-            this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
 
             const start = this.dragSelectStart;
             context.fillStyle = this.game.colors.highlight;
@@ -55,19 +57,22 @@ export class Mouse {
             context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
             context.setLineDash([]);
 
-            // context.beginPath();
-            // context.moveTo(start.x - 5, start.y);
-            // context.lineTo(start.x + 5, start.y);
-            // context.moveTo(start.x, start.y - 5);
-            // context.lineTo(start.x, start.y + 5);
-            // context.stroke();
+        }
 
-            // context.beginPath();
-            // context.moveTo(this.x - 5, this.y);
-            // context.lineTo(this.x + 5, this.y);
-            // context.moveTo(this.x, this.y - 5);
-            // context.lineTo(this.x, this.y + 5);
-            // context.stroke();
+        if (this.create.selected && !this.isHovering) {
+            const size = 16;
+            const x = this.x - size / 4;
+            const y = this.y - size / 4;
+
+            context.lineWidth = 4;
+            context.lineCap = "round";
+            context.beginPath();
+            context.moveTo(x - size / 2, y);
+            context.lineTo(x + size / 2, y);
+            context.moveTo(x, y - size / 2);
+            context.lineTo(x, y + size / 2);
+            context.stroke();
+            context.lineCap = "butt";
         }
     }
 
@@ -143,6 +148,9 @@ export class Mouse {
             if (obj !== null) {
                 this.startDrag(obj);
             }
+            else if (this.create.selected) {
+                this.create.completeCreationAt({x: this.x, y: this.y});
+            }
             else {
                 if (!event.shiftKey) {
                     this.game.clearSelection();
@@ -152,6 +160,8 @@ export class Mouse {
                 this.dragSelectStart.x = this.x;
                 this.dragSelectStart.y = this.y;
             }
+
+            this.create.clearSelection();
         }
     }
 
@@ -167,8 +177,6 @@ export class Mouse {
         if (this.lastDown - this.previousDown < this.clickSpeed * 2) {
             clicks++;
         }
-
-
 
         if (this.leftButton) {
             if (this.isDragging) {
@@ -236,8 +244,13 @@ export class Mouse {
         if (this.game.isSelectionEditable()) {
             this.game.enterEditMode();
         }
-        else if (event.ctrlKey === false && this.game.isSelectionShuffleable()) {
-            this.game.selected.forEach(obj => { obj.shuffle() });
+        else if (this.game.isSelectionShuffleable()) {
+            if(event.ctrlKey) {
+                this.game.selected.drawCard(null, true);
+            }
+            else {
+                this.game.selected.forEach(obj => { obj.shuffle() });
+            }
         }
     }
 

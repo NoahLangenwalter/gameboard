@@ -157,10 +157,13 @@ export class Deck extends GameObject {
 
 
 
-    drawCard = (targetPosition = null) => {
+    drawCard = (targetPosition = null, flip = false) => {
         if (this.cards.length > 0) {
             let drawn = this.cards.shift();
             drawn.isFaceUp = this.isFaceUp;
+            if(flip) {
+                drawn.isFaceUp = !drawn.isFaceUp;
+            }
 
             this.game.addObject(drawn);
             drawn.play(targetPosition);

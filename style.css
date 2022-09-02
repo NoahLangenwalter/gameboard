@@ -20,6 +20,10 @@ body {
     background: #666;
 }
 
+.preload {
+    display: none;
+}
+
 #info {
     display: block;
     color: black;
@@ -49,10 +53,6 @@ body {
     z-index: 1;
 }
 
-img {
-    display: none;
-}
-
 #editContainer {
     display: none;
     position: absolute;
@@ -74,4 +74,117 @@ img {
     overflow: hidden;
     overflow-wrap: break-word;
     white-space: pre-wrap;
+}
+
+#createPane {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.buttonPane {
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0px 0px 6px 3px rgba(0, 50, 100, 0.2);
+}
+
+.createButton {
+    display: flex;
+    width: 46px;
+    height: 46px;
+    padding: 10px;
+    border: none;
+    color: black;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.buttonPane button:last-child {
+    margin-bottom: 0;
+}
+
+#createMenu {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* display: flex;
+    flex-direction: column; */
+    margin-bottom: 10px;
+    transition: height .2s ease-out, bottom .2s ease-out;
+    z-index: 3;
+    height: 0;
+    bottom: -20px;
+    box-shadow: none;
+}
+
+.open #createMenu {
+    height: 148px;
+    bottom: 0;
+    box-shadow: 0px 0px 6px 3px rgba(0, 50, 100, 0.2);
+}
+
+#createToggle {
+    z-index: 4;
+}
+
+#iconSVG {
+    display: none;
+}
+
+.icon {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+}
+
+.icon rect {
+    stroke: black;
+}
+
+/* #createToggleIcon .iconFill {
+    fill: none;
+} */
+
+.open #createToggleButton .fill {
+    fill: black;
+}
+
+.open #createToggleButton path {
+    fill: white;
+}
+
+.open #createToggleButton:hover .fill {
+    stroke: #005793;
+    fill:#005793;
+}
+.open #createToggleButton:hover path {
+    fill:white;
+}
+
+.createButton:hover rect {
+    stroke: #005793;
+}
+
+.createButton:hover path {
+    fill:#005793;
+}
+
+.selected {
+    background: #eee;
+}
+
+.selected .fill {
+    stroke: black !important;
+    fill: black !important;
+}
+
+.selected .highlight {
+    fill:white !important;
 }
