@@ -44,6 +44,9 @@ export class Keyboard {
             else if (event.code === "KeyD" && event.ctrlKey) {
                 this.drawFromTarget();
             }
+            else if (event.code === "Delete") {
+                this.deleteValidTargets();
+            }
         }
         else if (this.game.mode === Mode.Create) {
             if (event.code === "Escape") {
@@ -69,6 +72,14 @@ export class Keyboard {
             if (targets[i].isShuffleable) {
                 targets[i].shuffle();
             }
+        }
+    }
+
+    deleteValidTargets() {
+        const targets = this.getActionTargets();
+
+        for (let i = 0; i < targets.length; i++) {
+            this.game.removeObject(targets[i]);
         }
     }
 
