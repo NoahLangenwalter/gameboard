@@ -42,10 +42,23 @@ export class Keyboard {
                 this.flipValidTargets();
             }
             else if (event.code === "KeyD" && event.ctrlKey) {
-                this.drawFromTarget();
+                if(this.mouse.targetAcquired) {
+                    const targetPos = this.game.view.toWorld(this.mouse.x, this.mouse.y);
+                    this.mouse.targeter.drawCardTo(targetPos, this.mouse.hoverTarget);
+                }
+                else {
+                    this.drawFromTarget();
+                }
+
+                if (this.mouse.isTargeting && this.mouse.targeter.isEmpty) {
+                    this.mouse.cancelTargeting();
+                }
             }
             else if (event.code === "Delete") {
                 this.deleteValidTargets();
+            }
+            else if (event.code === "Escape" && this.mouse.isTargeting) {
+                this.mouse.cancelTargeting();
             }
         }
         else if (this.game.mode === Mode.Create) {

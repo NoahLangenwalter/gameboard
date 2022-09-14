@@ -33,6 +33,8 @@ export class Mouse {
     get isHovering() { return this.#hovering !== null; }
     get hoverTarget() { return this.#hovering; }
     get isTargeting() { return this.#targeter !== null; }
+    get targeter() { return this.#targeter; }
+    get targetAcquired() { return this.isTargeting && this.isHovering && this.hoverTarget !== this.#targeter && this.hoverTarget.isCardTarget; }
 
     update() {
         this.updateHover();
@@ -359,6 +361,7 @@ export class Mouse {
 
             this.dragTimeout = setTimeout(() => {
                 this.#targeter = object;
+                this.game.selectObject(this.#targeter);
 
                 this.dragTimeout = null;
             }, this.clickSpeed * 0.8);
@@ -398,13 +401,17 @@ export class Mouse {
 
     endTargeting(event = null) {
         let targetObj = null;
-        if (this.isHovering && this.hoverTarget !== this.#targeter && this.hoverTarget.isCardTarget) {
-            targetObj = this.#hovering;
+        if (this.targetAcquired) {
+            targetObj = this.hoverTarget;
         }
 
         const targetPos = this.game.view.toWorld(this.x, this.y);
         this.#targeter.drawCardTo(targetPos, targetObj);
 
+        this.#targeter = null;
+    }
+
+    cancelTargeting() {
         this.#targeter = null;
     }
 
