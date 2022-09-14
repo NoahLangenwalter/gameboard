@@ -45,6 +45,11 @@ export class Keyboard {
                 this.drawFromTarget();
             }
         }
+        else if (this.game.mode === Mode.Create) {
+            if (event.code === "Escape") {
+                this.game.cancelCreate();
+            }
+        }
     }
 
     flipValidTargets() {

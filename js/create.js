@@ -29,25 +29,31 @@ export class Create {
         this.boardButton.classList.remove("selected");
 
         this.#selected = "NONE";
+
+        this.cardButton.blur();
+        this.deckButton.blur();
+        this.boardButton.blur();
     }
 
     handleCardClick = () =>  {
         this.clearSelection();
         this.#selected = "CARD";
         this.cardButton.classList.add("selected");
-
+        this.game.enterCreateMode();
     }
 
     handleDeckClick = () =>  {
         this.clearSelection();
         this.#selected = "DECK";
         this.deckButton.classList.add("selected");
+        this.game.enterCreateMode();
     }
 
     handleBoardClick = () => {
         this.clearSelection();
         this.#selected = "BOARD";
         this.boardButton.classList.add("selected");
+        this.game.enterCreateMode();
     }
 
     completeCreationAt(screenPos) {

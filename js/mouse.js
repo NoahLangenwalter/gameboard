@@ -1,4 +1,5 @@
 import { Card } from './card.js';
+import { Mode } from './game.js';
 
 export class Mouse {
     x = 0;
@@ -17,9 +18,8 @@ export class Mouse {
     dragSelect = false;
     dragSelectStart = { x: 0, y: 0 };
     dragTimeout = null;
-    constructor(game, create) {
+    constructor(game) {
         this.game = game;
-        this.create = create;
 
         game.canvas.addEventListener("mousedown", this.onMouseEvent, { passive: true });
         game.canvas.addEventListener("mouseup", this.onMouseEvent, { passive: true });
@@ -59,7 +59,7 @@ export class Mouse {
 
         }
 
-        if (this.create.selected) {
+        if (this.game.mode === Mode.Create) {
             const size = 16;
             const x = this.x - size / 4;
             const y = this.y - size / 4;
@@ -154,8 +154,8 @@ export class Mouse {
             if (obj !== null) {
                 this.startDrag(obj);
             }
-            else if (this.create.selected) {
-                this.create.completeCreationAt({x: this.x, y: this.y});
+            else if (this.game.mode === Mode.Create) {
+                this.game.completeCreationAt({x: this.x, y: this.y});
             }
             else {
                 if (!event.shiftKey) {
@@ -167,7 +167,7 @@ export class Mouse {
                 this.dragSelectStart.y = this.y;
             }
 
-            this.create.clearSelection();
+            this.game.cancelCreate();
         }
     }
 

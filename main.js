@@ -14,7 +14,8 @@ window.onload = function () {
     boardCanvas.height = window.innerHeight;
     const game = new Game(boardCanvas, ctx);
     const create = new Create(game);
-    const mouse = new Mouse(game, create);
+    game.creator = create;
+    const mouse = new Mouse(game);
     const keyboard = new Keyboard(game, mouse);
 
     function animate() {

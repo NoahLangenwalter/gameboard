@@ -27,6 +27,10 @@ export class Game {
     get editTarget() {
         return this.selected.values().next().value;
     }
+    
+    set creator(val) {
+        this.create = val;
+    }
 
     sortByZ(a, b) {
         return a.z > b.z ? 1 : -1;
@@ -156,14 +160,36 @@ export class Game {
     }
 
     exitEditMode() {
-        if (this.mode == Mode.Edit) {
+        if (this.mode === Mode.Edit) {
             this.mode = Mode.Play;
             this.editor.end();
+        }
+    }
+
+    enterCreateMode() {
+        if(this.mode === Mode.Edit) {
+            this.editor.end();
+        }
+        this.mode = Mode.Create;
+    }
+
+    cancelCreate() {
+        if (this.mode === Mode.Create) {
+            this.mode = Mode.Play;
+            this.create.clearSelection();
+        }
+    }
+
+    completeCreationAt(screenPos) {
+        if (this.mode === Mode.Create) {
+            this.create.completeCreationAt(screenPos);
+            this.mode = Mode.Play;
         }
     }
 }
 
 export const Mode = {
-    Play: 'Play',
-    Edit: 'Edit'
+    Play: "Play",
+    Edit: "Edit",
+    Create: "Create"
 };
