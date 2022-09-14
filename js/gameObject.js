@@ -99,10 +99,11 @@ export class GameObject {
     drawShadow(context, dragging = false) {
         let cR = this.cornerRadius * 2;
         context.lineWidth = cR;
-        context.shadowColor = "black"; //"rgba(0,0,0,.5)";
+        context.shadowColor = "black";
 
         if(dragging) {
-            context.shadowBlur = 40 * this.game.view.scale;
+            //TODO: Performance - don't use shadowBlur
+            context.shadowBlur = 40 * this.game.view.scale; 
             context.shadowOffsetX = 5 * this.game.view.scale;
             context.shadowOffsetY = 10 * this.game.view.scale;
         }
