@@ -96,8 +96,6 @@ export class Keyboard {
             let endPos = null;
             if (!(this.mouse.isHovering && targetDeck === this.mouse.hoverTarget)) {
                 endPos = this.game.view.toWorld(this.mouse.x, this.mouse.y);
-                endPos.x -= targetDeck.width / 2;
-                endPos.y -= targetDeck.height / 2;
             }
 
             targetDeck.drawCard(endPos);

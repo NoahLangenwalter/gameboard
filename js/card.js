@@ -273,7 +273,7 @@ export class Card extends GameObject {
         return textWidth < this.maxTextWidth;
     }
 
-    play = (targetPosition = null) => {
+    play = (targetPosition = null, animate = true) => {
         if(targetPosition === null) {
             targetPosition = {x: this.x, y: this.y + 30 + this.height};
         }
@@ -282,7 +282,15 @@ export class Card extends GameObject {
         this.x = this.deck.x;
         this.y = this.deck.y;
         this.z = 1000;
-        this.animations.moving.start(150, this.x, this.y, targetPosition.x, targetPosition.y);
+
+        if (animate) {
+            this.animations.moving.start(150, this.x, this.y, targetPosition.x, targetPosition.y);
+        }
+        else {
+            this.x = targetPosition.x;
+            this.y = targetPosition.y;
+            this.deck.handleDrawn();
+        }
     }
 
     addToDeck = (deck, offset = 0) => {

@@ -9,7 +9,6 @@ export class Deck extends GameObject {
     returningCards = [];
     empty = true;
 
-
     constructor(game, isFaceUp, numberOfCards, startX = 0, startY = 0, startZ = 0) {
         super(game, startX, startY, startZ);
 
@@ -36,6 +35,10 @@ export class Deck extends GameObject {
             && this.returnsInProgress === 0
             && !this.animations.flipping.status
             && !this.animations.shuffling.status
+    }
+
+    get isEmpty() {
+        return this.empty;
     }
 
     update() {
@@ -141,6 +144,19 @@ export class Deck extends GameObject {
         this.drawCard();
     }
 
+    drawCardTo(targetPosition, targetObj = null) {
+
+        if(targetObj !== null && targetObj.isCardTarget) {
+            const center = { x: this.x + this.width / 2, y: this.y + this.height / 2 };
+            const card = this.drawCard(center, false, false);
+
+            targetObj.returnCards([card]);
+        }
+        else {
+            this.drawCard(targetPosition);
+        }
+    }
+
     shuffle = () => {
         if (this.cards.length > 1) {
             this.animations.shuffling.start(this.x, this.y, this.cards);
@@ -155,25 +171,31 @@ export class Deck extends GameObject {
         this.animations.flipping.start(this, this.width, this.isFaceUp);
     }
 
+    drawCard = (targetPosition = null, flip = false, animate = true) => {
+        let drawn = null;
 
-
-    drawCard = (targetPosition = null, flip = false) => {
         if (this.cards.length > 0) {
-            let drawn = this.cards.shift();
+            if(targetPosition !== null) {
+                targetPosition.x -= this.width / 2;
+                targetPosition.y -= this.height / 2;
+            }
+
+            drawn = this.cards.shift();
             drawn.isFaceUp = this.isFaceUp;
-            if(flip) {
+            if (flip) {
                 drawn.isFaceUp = !drawn.isFaceUp;
             }
 
             this.game.addObject(drawn);
-            drawn.play(targetPosition);
-
             this.drawInProgress = true;
+            drawn.play(targetPosition, animate);
         }
 
         if (this.cards.length === 0) {
             this.empty = true;
         }
+        
+        return drawn;
     }
 
     returnCard = (card, offset = 0) => {

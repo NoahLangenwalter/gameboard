@@ -14,6 +14,7 @@ export class Mouse {
     previousDown = Date.now();
     #dragging = new Set();
     #hovering = null;
+    #targeter = null;
     clickSpeed = 150;
     dragSelect = false;
     dragSelectStart = { x: 0, y: 0 };
@@ -31,6 +32,7 @@ export class Mouse {
     get isDragging() { return this.#dragging.size > 0; }
     get isHovering() { return this.#hovering !== null; }
     get hoverTarget() { return this.#hovering; }
+    get isTargeting() { return this.#targeter !== null; }
 
     update() {
         this.updateHover();
@@ -39,7 +41,7 @@ export class Mouse {
     draw() {
         const context = this.game.ctx;
         this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
-        
+
         if (this.dragSelect) {
 
             const start = this.dragSelectStart;
@@ -56,7 +58,55 @@ export class Mouse {
             context.strokeStyle = this.game.colors.select;
             context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
             context.setLineDash([]);
+        }
 
+        if (this.isTargeting && this.hoverTarget !== this.#targeter) {
+            const from = this.game.view.toScreen(this.#targeter.x + this.#targeter.width / 2, this.#targeter.y + this.#targeter.height / 2);
+            let r = 25;
+            let to = { x: this.x, y: this.y };
+            if (this.isHovering) {
+                to = this.game.view.toScreen(this.hoverTarget.x + this.hoverTarget.width / 2, this.hoverTarget.y + this.hoverTarget.height / 2);
+            }
+            const length = Math.abs(to.y - from.y) + Math.abs(to.x - from.x);
+            const xBackoff = (to.x - from.x) / length;
+            const yBackoff = (to.y - from.y) / length;
+            to.x -= xBackoff * r;
+            to.y -= yBackoff * r;
+            let toCenterX = to.x;
+            let toCenterY = to.y;
+
+            // Equivalent to "hightlight" color: #33CCFF
+            const color = "rgba(51, 204, 255, .5)";
+            context.fillStyle = color;
+            context.lineWidth = r;
+            context.lineCap = "butt";
+            const gradient = context.createLinearGradient(from.x, from.y, to.x, to.y);
+            gradient.addColorStop(0, "rgba(51, 204, 255, 0)");
+            gradient.addColorStop(1, color);
+            context.strokeStyle = gradient;
+
+            context.beginPath();
+            context.moveTo(from.x, from.y);
+            context.lineTo(to.x, to.y);
+            context.stroke();
+
+            context.beginPath();
+            let angle = Math.atan2(to.y - from.y, to.x - from.x)
+            let x = r * Math.cos(angle) + toCenterX;
+            let y = r * Math.sin(angle) + toCenterY;
+            toCenterX += r / 2 * Math.cos(angle);
+            toCenterY += r / 2 * Math.sin(angle);
+            context.moveTo(x, y);
+            angle += (1 / 3) * (2 * Math.PI)
+            x = r * Math.cos(angle) + toCenterX;
+            y = r * Math.sin(angle) + toCenterY;
+            context.lineTo(x, y);
+            angle += (1 / 3) * (2 * Math.PI)
+            x = r * Math.cos(angle) + toCenterX;
+            y = r * Math.sin(angle) + toCenterY;
+            context.lineTo(x, y);
+            context.closePath();
+            context.fill();
         }
 
         if (this.game.mode === Mode.Create) {
@@ -68,7 +118,7 @@ export class Mouse {
             context.lineCap = "round";
             context.strokeStyle = "black";
 
-            if(this.isHovering) {
+            if (this.isHovering) {
                 context.strokeStyle = "red";
             }
 
@@ -103,7 +153,7 @@ export class Mouse {
             this.handleWheel(event);
         }
 
-        if (this.leftButton & this.isDragging) {
+        if (this.leftButton && this.isDragging) {
             this.drag();
         }
         else if (this.rightButton) {
@@ -118,21 +168,22 @@ export class Mouse {
             this.#hovering = null;
         }
 
+        let draggingCards = false;
         if (this.isDragging) {
-            let draggingCards = false;
             for (const dragee of this.#dragging.values()) {
                 if (dragee.obj instanceof Card) {
                     draggingCards = true;
                     break;
                 }
             }
-
-            if (draggingCards && newHover !== null && newHover.isCardTarget) {
-                this.#hovering = newHover;
-                this.#hovering.hoverEnter();
-            }
         }
-        else if (!this.dragSelect && this.#hovering === null && newHover !== null && newHover.isInteractable) {
+
+        if (this.#hovering === null && !this.dragSelect && newHover !== null &&
+            ((!this.isDragging && !this.isTargeting && newHover.isInteractable)
+                || (draggingCards && newHover.isCardTarget)
+                || (this.isTargeting && newHover.isCardTarget)
+            )
+        ) {
             this.#hovering = newHover;
             this.#hovering.hoverEnter();
         }
@@ -152,10 +203,15 @@ export class Mouse {
         if (this.leftButton) {
             let obj = this.detectTopObject();
             if (obj !== null) {
-                this.startDrag(obj);
+                if (event.ctrlKey && obj.isCardTarget) {
+                    this.startTargeting(obj);
+                }
+                else {
+                    this.startDrag(obj);
+                }
             }
             else if (this.game.mode === Mode.Create) {
-                this.game.completeCreationAt({x: this.x, y: this.y});
+                this.game.completeCreationAt({ x: this.x, y: this.y });
             }
             else {
                 if (!event.shiftKey) {
@@ -188,6 +244,9 @@ export class Mouse {
             if (this.isDragging) {
                 this.endDrag();
             }
+            if (this.isTargeting) {
+                this.endTargeting(event);
+            }
             if (clicks === 1) {
                 this.handleLeftClick(event);
             } else if (clicks === 2) {
@@ -212,6 +271,10 @@ export class Mouse {
 
         if (this.isDragging) {
             this.endDrag();
+        }
+
+        if (this.isTargeting) {
+            this.endTargeting();
         }
 
         this.dragSelect = false;
@@ -251,7 +314,7 @@ export class Mouse {
             this.game.enterEditMode();
         }
         else if (this.game.isSelectionShuffleable()) {
-            if(event.ctrlKey) {
+            if (event.ctrlKey) {
                 this.game.selected.drawCard(null, true);
             }
             else {
@@ -288,6 +351,20 @@ export class Mouse {
         }, this.clickSpeed * 0.8);
     }
 
+    startTargeting(object) {
+        if (object.isCardTarget && !object.isEmpty) {
+            const objCenter = this.game.view.toScreen(object.x + object.width / 2, object.y + object.height / 2);
+            this.dragStartX = objCenter.x;
+            this.dragStartY = objCenter.y;
+
+            this.dragTimeout = setTimeout(() => {
+                this.#targeter = object;
+
+                this.dragTimeout = null;
+            }, this.clickSpeed * 0.8);
+        }
+    }
+
     drag() {
         const mouseinWorld = this.game.view.toWorld(this.x, this.y);
 
@@ -317,6 +394,18 @@ export class Mouse {
             this.#hovering.returnCards(cards);
         }
         this.#dragging.clear();
+    }
+
+    endTargeting(event = null) {
+        let targetObj = null;
+        if (this.isHovering && this.hoverTarget !== this.#targeter && this.hoverTarget.isCardTarget) {
+            targetObj = this.#hovering;
+        }
+
+        const targetPos = this.game.view.toWorld(this.x, this.y);
+        this.#targeter.drawCardTo(targetPos, targetObj);
+
+        this.#targeter = null;
     }
 
     selectWithinDragRegion() {
