@@ -13,8 +13,8 @@ export class Card extends GameObject {
         this.isFaceUp = isFaceUp;
         this.width = 250;
         this.height = 350;
-        this.maxTextHeight = this.height * 0.9;
-        this.maxTextWidth = this.width * 0.9;
+        this.maxTextHeight = this.height * 0.85;
+        this.maxTextWidth = this.width * 0.85;
 
         this.content = content.toString();
 
@@ -174,7 +174,7 @@ export class Card extends GameObject {
         this.fontSize = 200;
         this.font = `${this.fontSize}px ${this.game.font}`;
         context.font = this.font;
-        this.lineHeight = context.measureText("M").width * 1.2;
+        this.lineHeight = context.measureText("M").width * lineHeightMultiplier;
         this.fontTooBig = false;
 
         this.lines = this.generateLines(context);
@@ -185,7 +185,7 @@ export class Card extends GameObject {
             this.font = `${this.fontSize}px ${this.game.font}`;
             context.font = this.font;
 
-            this.lineHeight = context.measureText("M").width * 1.2;
+            this.lineHeight = context.measureText("M").width * lineHeightMultiplier;
 
             this.lines = this.generateLines(context);
         }
