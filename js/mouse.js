@@ -59,7 +59,7 @@ export class Mouse {
 
         }
 
-        if (this.create.selected && !this.isHovering) {
+        if (this.create.selected) {
             const size = 16;
             const x = this.x - size / 4;
             const y = this.y - size / 4;
@@ -67,6 +67,11 @@ export class Mouse {
             context.lineWidth = 4;
             context.lineCap = "round";
             context.strokeStyle = "black";
+
+            if(this.isHovering) {
+                context.strokeStyle = "red";
+            }
+
             context.beginPath();
             context.moveTo(x - size / 2, y);
             context.lineTo(x + size / 2, y);
