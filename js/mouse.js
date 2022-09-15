@@ -1,4 +1,5 @@
 import { Card } from './card.js';
+import { DrawOrientation, DrawSpacing } from './deck.js';
 import { Mode } from './game.js';
 
 export class Mouse {
@@ -15,10 +16,13 @@ export class Mouse {
     #dragging = new Set();
     #hovering = null;
     #targeter = null;
+    targetOrientation = DrawOrientation.Horizontal;
+    targetSpacing = DrawSpacing.Stacked;
     clickSpeed = 150;
     dragSelect = false;
     dragSelectStart = { x: 0, y: 0 };
     dragTimeout = null;
+    drawCount = 1;
     constructor(game) {
         this.game = game;
 
@@ -33,7 +37,6 @@ export class Mouse {
     get isHovering() { return this.#hovering !== null; }
     get hoverTarget() { return this.#hovering; }
     get isTargeting() { return this.#targeter !== null; }
-    get targeter() { return this.#targeter; }
     get targetAcquired() { return this.isTargeting && this.isHovering && this.hoverTarget !== this.#targeter && this.hoverTarget.isCardTarget; }
 
     update() {
@@ -45,93 +48,163 @@ export class Mouse {
         this.game.ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         if (this.dragSelect) {
-
-            const start = this.dragSelectStart;
-            context.fillStyle = this.game.colors.highlight;
-            context.globalAlpha = 0.15;
-            context.fillRect(start.x, start.y, this.x - start.x, this.y - start.y);
-            context.globalAlpha = 1;
-            context.lineJoin = "miter";
-            context.lineWidth = 2;
-            context.strokeStyle = "white";
-            context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
-            context.lineWidth = 2;
-            context.setLineDash([2, 2]);
-            context.strokeStyle = this.game.colors.select;
-            context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
-            context.setLineDash([]);
+            this.drawDragSelect(context);
         }
 
         if (this.isTargeting && this.hoverTarget !== this.#targeter) {
-            const from = this.game.view.toScreen(this.#targeter.x + this.#targeter.width / 2, this.#targeter.y + this.#targeter.height / 2);
-            let r = 25;
-            let to = { x: this.x, y: this.y };
-            if (this.isHovering) {
-                to = this.game.view.toScreen(this.hoverTarget.x + this.hoverTarget.width / 2, this.hoverTarget.y + this.hoverTarget.height / 2);
-            }
-            const length = Math.abs(to.y - from.y) + Math.abs(to.x - from.x);
-            const xBackoff = (to.x - from.x) / length;
-            const yBackoff = (to.y - from.y) / length;
-            to.x -= xBackoff * r;
-            to.y -= yBackoff * r;
-            let toCenterX = to.x;
-            let toCenterY = to.y;
-
-            // Equivalent to "hightlight" color: #33CCFF
-            const color = "rgba(51, 204, 255, .5)";
-            context.fillStyle = color;
-            context.lineWidth = r;
-            context.lineCap = "butt";
-            const gradient = context.createLinearGradient(from.x, from.y, to.x, to.y);
-            gradient.addColorStop(0, "rgba(51, 204, 255, 0)");
-            gradient.addColorStop(1, color);
-            context.strokeStyle = gradient;
-
-            context.beginPath();
-            context.moveTo(from.x, from.y);
-            context.lineTo(to.x, to.y);
-            context.stroke();
-
-            context.beginPath();
-            let angle = Math.atan2(to.y - from.y, to.x - from.x)
-            let x = r * Math.cos(angle) + toCenterX;
-            let y = r * Math.sin(angle) + toCenterY;
-            toCenterX += r / 2 * Math.cos(angle);
-            toCenterY += r / 2 * Math.sin(angle);
-            context.moveTo(x, y);
-            angle += (1 / 3) * (2 * Math.PI)
-            x = r * Math.cos(angle) + toCenterX;
-            y = r * Math.sin(angle) + toCenterY;
-            context.lineTo(x, y);
-            angle += (1 / 3) * (2 * Math.PI)
-            x = r * Math.cos(angle) + toCenterX;
-            y = r * Math.sin(angle) + toCenterY;
-            context.lineTo(x, y);
-            context.closePath();
-            context.fill();
+            this.drawTargeting(context);
         }
 
         if (this.game.mode === Mode.Create) {
-            const size = 16;
-            const x = this.x - size / 4;
-            const y = this.y - size / 4;
+            this.drawCreateGuide(context);
+        }
 
-            context.lineWidth = 4;
-            context.lineCap = "round";
-            context.strokeStyle = "black";
+        if (this.isHovering && this.hoverTarget.isCardTarget) {
+            this.drawHoverStats(context);
+        }
+    }
 
-            if (this.isHovering) {
-                context.strokeStyle = "red";
+    drawDragSelect(context) {
+        const start = this.dragSelectStart;
+        context.fillStyle = this.game.colors.highlight;
+        context.globalAlpha = 0.15;
+        context.fillRect(start.x, start.y, this.x - start.x, this.y - start.y);
+        context.globalAlpha = 1;
+        context.lineJoin = "miter";
+        context.lineWidth = 2;
+        context.strokeStyle = "white";
+        context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
+        context.lineWidth = 2;
+        context.setLineDash([2, 2]);
+        context.strokeStyle = this.game.colors.select;
+        context.strokeRect(start.x, start.y, this.x - start.x, this.y - start.y);
+        context.setLineDash([]);
+    }
+
+    drawTargeting(context) {
+        const from = this.game.view.toScreen(this.#targeter.x + this.#targeter.width / 2, this.#targeter.y + this.#targeter.height / 2);
+        let r = 25;
+        let to = { x: this.x, y: this.y };
+        if (this.isHovering) {
+            to = this.game.view.toScreen(this.hoverTarget.x + this.hoverTarget.width / 2, this.hoverTarget.y + this.hoverTarget.height / 2);
+        }
+        else {
+            let count = this.drawCount === 0 || this.drawCount > this.#targeter.cards.length ? this.#targeter.cards.length : this.drawCount;
+            const hR = 20;
+            context.strokeStyle = this.game.colors.highlight;
+            context.lineJoin = "round";
+            context.lineWidth = hR;
+            context.globalAlpha = 0.3;
+            const scale = this.game.view.scale;
+            let dimensions = {x: this.#targeter.width * scale, y: this.#targeter.height * scale};
+            let spacing;
+            if (this.targetOrientation === DrawOrientation.Horizontal) {
+                spacing = this.targetSpacing === DrawSpacing.Stacked ? dimensions.x * .25 : dimensions.x + 20 * scale;
+                dimensions.x = spacing * (count - 1) + dimensions.x;
+            }
+            else {
+                spacing = this.targetSpacing === DrawSpacing.Stacked ? dimensions.y * .25 : dimensions.y + 20 * scale;
+                dimensions.y = spacing * (count - 1) + dimensions.y;
             }
 
-            context.beginPath();
-            context.moveTo(x - size / 2, y);
-            context.lineTo(x + size / 2, y);
-            context.moveTo(x, y - size / 2);
-            context.lineTo(x, y + size / 2);
-            context.stroke();
-            context.lineCap = "butt";
+            context.strokeRect(this.x - dimensions.x / 2, this.y - dimensions.y / 2, dimensions.x, dimensions.y);
+            context.globalAlpha = 1;
         }
+        const length = Math.abs(to.y - from.y) + Math.abs(to.x - from.x);
+        const xBackoff = (to.x - from.x) / length;
+        const yBackoff = (to.y - from.y) / length;
+        to.x -= xBackoff * r;
+        to.y -= yBackoff * r;
+        let toCenterX = to.x;
+        let toCenterY = to.y;
+
+        // Equivalent to "hightlight" color: #33CCFF
+        const color = "rgba(51, 204, 255, .5)";
+        context.fillStyle = color;
+        context.lineWidth = r;
+        context.lineCap = "butt";
+        const gradient = context.createLinearGradient(from.x, from.y, to.x, to.y);
+        gradient.addColorStop(0, "rgba(51, 204, 255, 0)");
+        gradient.addColorStop(1, color);
+        context.strokeStyle = gradient;
+
+        // line
+        context.beginPath();
+        context.moveTo(from.x, from.y);
+        context.lineTo(to.x, to.y);
+        context.stroke();
+
+        // arrow
+        context.beginPath();
+        let angle = Math.atan2(to.y - from.y, to.x - from.x)
+        let x = r * Math.cos(angle) + toCenterX;
+        let y = r * Math.sin(angle) + toCenterY;
+        toCenterX += r / 2 * Math.cos(angle);
+        toCenterY += r / 2 * Math.sin(angle);
+        context.moveTo(x, y);
+        angle += (1 / 3) * (2 * Math.PI)
+        x = r * Math.cos(angle) + toCenterX;
+        y = r * Math.sin(angle) + toCenterY;
+        context.lineTo(x, y);
+        angle += (1 / 3) * (2 * Math.PI)
+        x = r * Math.cos(angle) + toCenterX;
+        y = r * Math.sin(angle) + toCenterY;
+        context.lineTo(x, y);
+        context.closePath();
+        context.fill();
+
+        // draw count
+        let count = this.drawCount.toString();
+        if (this.drawCount === 0) {
+            count = "∞";
+        }
+        context.strokeStyle = color;
+        context.fillStyle = "white";
+        context.textBaseline = "middle";
+        context.textAlign = "center";
+        context.font = "25px sans-serif";
+        context.lineWidth = 7;
+        context.strokeText(count, to.x, to.y);
+        context.fillText(count, to.x, to.y);
+        // targeter count
+        const deckCenter = this.game.view.toScreen(this.#targeter.center.x, this.#targeter.center.y);
+        context.strokeText(this.#targeter.cardCount, deckCenter.x, deckCenter.y);
+        context.fillText(this.#targeter.cardCount, deckCenter.x, deckCenter.y);
+    }
+
+    drawCreateGuide(context) {
+        const size = 16;
+        const x = this.x - size / 4;
+        const y = this.y - size / 4;
+
+        context.lineWidth = 4;
+        context.lineCap = "round";
+        context.strokeStyle = "black";
+
+        if (this.isHovering) {
+            context.strokeStyle = "red";
+        }
+
+        context.beginPath();
+        context.moveTo(x - size / 2, y);
+        context.lineTo(x + size / 2, y);
+        context.moveTo(x, y - size / 2);
+        context.lineTo(x, y + size / 2);
+        context.stroke();
+        context.lineCap = "butt";
+    }
+
+    drawHoverStats(context) {
+        // deck count
+        context.strokeStyle = "rgba(51, 204, 255, .75)";
+        context.fillStyle = "white";
+        context.textBaseline = "middle";
+        context.textAlign = "center";
+        context.font = "25px sans-serif";
+        context.lineWidth = 7;
+        const deckCenter = this.game.view.toScreen(this.hoverTarget.center.x, this.hoverTarget.center.y);
+        context.strokeText(this.hoverTarget.cardCount, deckCenter.x, deckCenter.y);
+        context.fillText(this.hoverTarget.cardCount, deckCenter.x, deckCenter.y);
     }
 
     onMouseEvent = (event) => {
@@ -400,15 +473,24 @@ export class Mouse {
     }
 
     endTargeting(event = null) {
+        this.performTargetedAction();
+
+        this.cancelTargeting();
+    }
+
+    performTargetedAction() {
         let targetObj = null;
         if (this.targetAcquired) {
             targetObj = this.hoverTarget;
         }
 
         const targetPos = this.game.view.toWorld(this.x, this.y);
-        this.#targeter.drawCardTo(targetPos, targetObj);
+        const count = this.drawCount > 0 ? this.drawCount : this.#targeter.cardCount;
+        let emptyAfterDraw = this.#targeter.drawCardsTo(count, targetPos, targetObj, this.targetOrientation, this.targetSpacing);
 
-        this.#targeter = null;
+        if (emptyAfterDraw) {
+            this.cancelTargeting();
+        }
     }
 
     cancelTargeting() {

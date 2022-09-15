@@ -26,6 +26,9 @@ export class GameObject {
     set x(v) { this._x = v }
     set y(v) { this._y = v }
     set z(v) { this._z = v }
+    get center() {
+        return { x: this.x + this.width / 2, y: this.y + this.height / 2 };
+    }
 
     activate() {
         // console.log("Activated: " + this);
@@ -101,9 +104,9 @@ export class GameObject {
         context.lineWidth = cR;
         context.shadowColor = "black";
 
-        if(dragging) {
+        if (dragging) {
             //TODO: Performance - don't use shadowBlur
-            context.shadowBlur = 40 * this.game.view.scale; 
+            context.shadowBlur = 40 * this.game.view.scale;
             context.shadowOffsetX = 5 * this.game.view.scale;
             context.shadowOffsetY = 10 * this.game.view.scale;
         }
@@ -118,7 +121,7 @@ export class GameObject {
         context.shadowOffsetX = 0;
         context.shadowOffsetY = 0;
     }
-    
+
 
     draw(context) {
         this.drawHighlight(context);

@@ -4,7 +4,7 @@ import { AnimationData } from "./animationData.js";
 
 export class Deck extends GameObject {
     isFaceUp = false;
-    drawInProgress = false;
+    drawsInProgress = 0;
     returnsInProgress = 0;
     returningCards = [];
     empty = true;
@@ -31,7 +31,7 @@ export class Deck extends GameObject {
     }
 
     get isInteractable() {
-        return !this.drawInProgress
+        return this.drawsInProgress === 0
             && this.returnsInProgress === 0
             && !this.animations.flipping.status
             && !this.animations.shuffling.status
@@ -40,6 +40,8 @@ export class Deck extends GameObject {
     get isEmpty() {
         return this.empty;
     }
+
+    get cardCount() { return this.cards.length };
 
     update() {
         if (this.animations.flipping.status) {
@@ -145,8 +147,7 @@ export class Deck extends GameObject {
     }
 
     drawCardTo(targetPosition, targetObj = null) {
-
-        if(targetObj !== null && targetObj.isCardTarget) {
+        if (targetObj !== null && targetObj.isCardTarget) {
             const center = { x: this.x + this.width / 2, y: this.y + this.height / 2 };
             const card = this.drawCard(center, false, false);
 
@@ -154,6 +155,47 @@ export class Deck extends GameObject {
         }
         else {
             this.drawCard(targetPosition);
+        }
+    }
+
+    drawCardsTo(count, targetPosition, targetObj = null, drawOrientation = DrawOrientation.Horizontal, drawSpacing = DrawSpacing.Stacked) {
+        count = count > this.cards.length ? this.cards.length : count;
+        let delay = 0;
+        const interval = 250 / count;
+        let spacing;
+        if (drawOrientation === DrawOrientation.Horizontal) {
+            spacing = drawSpacing === DrawSpacing.Stacked ? this.width * .25 : this.width + 20;
+            targetPosition.x -= spacing * (count - 1) / 2;
+        }
+        else {
+            spacing = drawSpacing === DrawSpacing.Stacked ? this.height * .25 : this.height + 20;
+            targetPosition.y -= spacing * (count - 1) / 2;
+        }
+
+        if (targetObj !== null && targetObj.isCardTarget) {
+            const center = { x: this.x + this.width / 2, y: this.y + this.height / 2 };
+            const drawnCards = [];
+            for (let i = 0; i < count; i++) {
+                const card = this.drawCard({ ...center }, false, false);
+                drawnCards.push(card);
+            }
+
+            targetObj.returnCards(drawnCards);
+
+            return this.isEmpty;
+        }
+        else {
+            for (let i = 0; i < count; i++) {
+                setTimeout(() => {
+                    this.drawCardTo({ ...targetPosition }, targetObj);
+
+                    drawOrientation === DrawOrientation.Horizontal ? targetPosition.x += spacing : targetPosition.y += spacing;
+                }, delay);
+
+                delay += interval;
+            }
+
+            return count >= this.cards.length;
         }
     }
 
@@ -174,8 +216,8 @@ export class Deck extends GameObject {
     drawCard = (targetPosition = null, flip = false, animate = true) => {
         let drawn = null;
 
-        if (this.cards.length > 0) {
-            if(targetPosition !== null) {
+        if (!this.empty) {
+            if (targetPosition !== null) {
                 targetPosition.x -= this.width / 2;
                 targetPosition.y -= this.height / 2;
             }
@@ -187,29 +229,33 @@ export class Deck extends GameObject {
             }
 
             this.game.addObject(drawn);
-            this.drawInProgress = true;
+            this.drawsInProgress++;
             drawn.play(targetPosition, animate);
         }
 
         if (this.cards.length === 0) {
             this.empty = true;
         }
-        
+
         return drawn;
     }
 
-    returnCard = (card, offset = 0) => {
+    returnCard = (card, delay = 0) => {
         this.returnsInProgress++;
-        card.addToDeck(this, offset);
+        card.addToDeck(this, delay);
     }
 
     returnCards = (cards) => {
         this.returningCards = cards;
         this.returningCards.sort(this.game.sortByZ);
+        let delay = 0;
+        const interval = 250 / cards.length;
 
         for (let i = 0; i < cards.length; i++) {
             const card = cards[i];
-            this.returnCard(card, (cards.length - i) * 10);
+            this.returnCard(card, delay);
+
+            delay += interval;
         }
     }
 
@@ -226,7 +272,7 @@ export class Deck extends GameObject {
     }
 
     handleDrawn = () => {
-        this.drawInProgress = false;
+        this.drawsInProgress--;
     }
 
     handleReturn = (card) => {
@@ -236,6 +282,7 @@ export class Deck extends GameObject {
             this.returningCards.forEach(card => {
                 //adds to top;
                 card.inDeck = true;
+                card.moving = false;
                 this.cards.unshift(card);
                 this.game.removeObject(card);
                 this.game.deselectObject(card);
@@ -350,4 +397,14 @@ class ShuffleAnimation extends AnimationData {
             this.shuffledCards[i] = t;
         }
     }
+}
+
+export const DrawOrientation = {
+    Horizontal: "Horizontal",
+    Vertical: "Vertical"
+}
+
+export const DrawSpacing = {
+    Stacked: "Stacked",
+    Spread: "Spread"
 }

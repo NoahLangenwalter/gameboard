@@ -6,6 +6,7 @@ export class Card extends GameObject {
     deck = null;
     #content = "";
     #isFaceUp = true;
+    moving = false;
 
     constructor(game, content = "", isFaceUp = true, startX = 0, startY = 0, startZ = 0) {
         super(game, startX, startY, startZ);
@@ -44,7 +45,8 @@ export class Card extends GameObject {
     set isFaceUp(v) { this.#isFaceUp = v }
     get isInteractable() {
         return !this.animations.flipping.status
-            && !this.animations.moving.status;
+            && !this.animations.moving.status
+            && !this.moving;
     }
     get content() { return this.#content; }
     set content(val) {
@@ -274,14 +276,14 @@ export class Card extends GameObject {
     }
 
     play = (targetPosition = null, animate = true) => {
-        if(targetPosition === null) {
-            targetPosition = {x: this.x, y: this.y + 30 + this.height};
+        if (targetPosition === null) {
+            targetPosition = { x: this.x, y: this.y + 30 + this.height };
         }
 
         this.inDeck = false;
         this.x = this.deck.x;
         this.y = this.deck.y;
-        this.z = 1000;
+        this.z = this.game.nextZ + 1000;
 
         if (animate) {
             this.animations.moving.start(150, this.x, this.y, targetPosition.x, targetPosition.y);
@@ -293,16 +295,21 @@ export class Card extends GameObject {
         }
     }
 
-    addToDeck = (deck, offset = 0) => {
+    addToDeck = (deck, delay = 0) => {
+        this.moving = true;
+        
         this.game.deselectObject(this);
         this.deck = deck;
-        this.animations.moving.start(250, this._x, this._y, this.deck.x, this.deck.y, true);
 
-        this.x = this.deck.x;
-        this.y = this.deck.y;
-        if (this.isFaceUp !== this.deck.isFaceUp) {
-            this.flip();
-        }
+        setTimeout(() => {
+            this.animations.moving.start(250, this._x, this._y, this.deck.x, this.deck.y, true);
+
+            this.x = this.deck.x;
+            this.y = this.deck.y;
+            if (this.isFaceUp !== this.deck.isFaceUp) {
+                this.flip();
+            }
+        }, delay);
     }
 
     activate() {
@@ -337,7 +344,7 @@ export class FlipAnimation extends AnimationData {
         if (this.elapsedPercent > .5) {
             this.isFaceUp = !this.startedFaceUp;
 
-            if(!this.flipped) {
+            if (!this.flipped) {
                 this.flipped = true;
                 this.obj.handleFlipMidpoint(this.isFaceUp);
             }

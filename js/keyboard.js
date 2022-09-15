@@ -1,10 +1,12 @@
+import { DrawOrientation, DrawSpacing } from "./deck.js";
 import { Mode } from "./game.js";
 
 
 export class Keyboard {
     key;
-    reservedCombos = ["KeyS", "KeyF", "KeyE", "KeyD"];
+    reservedCombos = ["KeyS", "KeyF", "KeyE", "KeyD", "Backquote", "Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9", "Digit0"];
     ignored = ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight"];
+    numerics = ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
     constructor(game, mouse) {
         this.game = game;
         this.mouse = mouse;
@@ -41,24 +43,45 @@ export class Keyboard {
             else if (event.code === "KeyF" && event.ctrlKey) {
                 this.flipValidTargets();
             }
-            else if (event.code === "KeyD" && event.ctrlKey) {
-                if(this.mouse.targetAcquired) {
-                    const targetPos = this.game.view.toWorld(this.mouse.x, this.mouse.y);
-                    this.mouse.targeter.drawCardTo(targetPos, this.mouse.hoverTarget);
-                }
-                else {
-                    this.drawFromTarget();
-                }
-
-                if (this.mouse.isTargeting && this.mouse.targeter.isEmpty) {
-                    this.mouse.cancelTargeting();
-                }
-            }
             else if (event.code === "Delete") {
                 this.deleteValidTargets();
             }
-            else if (event.code === "Escape" && this.mouse.isTargeting) {
-                this.mouse.cancelTargeting();
+            else if (this.mouse.isTargeting) {
+                if (event.code === "KeyD" && event.ctrlKey) {
+                    this.mouse.performTargetedAction();
+                }
+                else if (event.code === "Escape") {
+                    this.mouse.cancelTargeting();
+                }
+                else if (this.numerics.includes(event.key)) {
+                    if (event.key === "`") {
+                        this.mouse.drawCount = 0;
+                    }
+                    else if (event.key === "0") {
+                        this.mouse.drawCount = 10;
+                    }
+                    else {
+                        this.mouse.drawCount = parseInt(event.key);
+                    }
+                }
+                else if (event.code.startsWith("Arrow")) {
+                    if (event.code.includes("Up")) {
+                        this.mouse.targetOrientation = DrawOrientation.Vertical;
+                        this.mouse.targetSpacing = DrawSpacing.Spread;
+                    }
+                    else if (event.code.includes("Down")) {
+                        this.mouse.targetOrientation = DrawOrientation.Vertical;
+                        this.mouse.targetSpacing = DrawSpacing.Stacked;
+                    }
+                    else if (event.code.includes("Right")) {
+                        this.mouse.targetOrientation = DrawOrientation.Horizontal;
+                        this.mouse.targetSpacing = DrawSpacing.Spread;
+                    }
+                    else if (event.code.includes("Left")) {
+                        this.mouse.targetOrientation = DrawOrientation.Horizontal;
+                        this.mouse.targetSpacing = DrawSpacing.Stacked;
+                    }
+                }
             }
         }
         else if (this.game.mode === Mode.Create) {
@@ -93,25 +116,6 @@ export class Keyboard {
 
         for (let i = 0; i < targets.length; i++) {
             this.game.removeObject(targets[i]);
-        }
-    }
-
-    drawFromTarget() {
-        let targetDeck = null;
-        if (this.mouse.isHovering && this.mouse.hoverTarget.isCardTarget) {
-            targetDeck = this.mouse.hoverTarget;
-        }
-        else if (this.game.selected.size === 1) {
-            targetDeck = this.game.editTarget;
-        }
-
-        if (targetDeck !== null && targetDeck.isCardTarget) {
-            let endPos = null;
-            if (!(this.mouse.isHovering && targetDeck === this.mouse.hoverTarget)) {
-                endPos = this.game.view.toWorld(this.mouse.x, this.mouse.y);
-            }
-
-            targetDeck.drawCard(endPos);
         }
     }
 
