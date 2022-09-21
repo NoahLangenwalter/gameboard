@@ -86,7 +86,7 @@ export class Create {
     createDeckAt(worldPos) {
         worldPos.x -= 250/ 2; //TODO: Refactor?
         worldPos.y -= 350/ 2;
-        const deck = new Deck(this.game, false, 0, worldPos.x, worldPos.y, this.game.nextZ);
+        const deck = new Deck(this.game, false, worldPos.x, worldPos.y, this.game.nextZ);
         this.game.addObject(deck);
     }
 }

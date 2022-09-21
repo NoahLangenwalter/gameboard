@@ -11,6 +11,7 @@ export class GameObject {
     isFlippable = true;
 
     constructor(game, startX = 0, startY = 0, startZ = -1) {
+        this.className = this.constructor.name;
         this.game = game;
         this._x = startX;
         this._y = startY;
@@ -171,4 +172,13 @@ export class GameObject {
             hitBounds.bottomRight.x > screenBounds.topLeft.x &&
             hitBounds.bottomRight.y > screenBounds.topLeft.y;
     }
-} 
+
+    static serializableProperties = ["className", "x", "y", "z"];
+    serialize() {
+        return JSON.stringify(this, GameObject.serializableProperties, 0);
+    }
+
+    deserialize(object) {
+        Object.assign(this, object);
+    }
+}

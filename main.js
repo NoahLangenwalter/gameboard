@@ -45,7 +45,27 @@ window.onload = function () {
         // game.addObject(new Card(game, "B", true, 1050, 240, 3));
         // game.addObject(new Card(game, "supercalifragilisticexpialidocious!", true, 0, 0, 5));
 
-        loadPlayingCards();
+        document.getElementById("saveButton").addEventListener("click", saveState);
+
+        const savedState = localStorage.getItem("boardState");
+        if(savedState) {
+
+            const state = JSON.parse(savedState);
+            game.view.setUp(state.viewOffset, state.scale);
+
+            state.objects.forEach(obj => {
+                const original_class = eval(obj.className);
+
+                const classedObj = new original_class(game);
+
+                classedObj.deserialize(obj);
+
+                game.addObject(classedObj, classedObj.z);
+            });
+        }
+        else {
+            loadPlayingCards();
+        }
 
         requestAnimationFrame(animate);
     }
@@ -54,7 +74,7 @@ window.onload = function () {
         const centerPos = game.view.toWorld(window.innerWidth / 2, window.innerHeight / 2);
         centerPos.x -= 250 / 2;
         centerPos.y -= 350 / 2
-        const drawPile = new Deck(game, false, 0, centerPos.x, centerPos.y, 1)
+        const drawPile = new Deck(game, false, centerPos.x, centerPos.y, 1)
         game.addObject(drawPile);
 
         const suits = ["❤️", "♠️", "🔶", "♣️"];
@@ -72,6 +92,25 @@ window.onload = function () {
         });
 
         drawPile.returnCards(cards);
+    }
+
+    function saveState() {
+        const stateObj = {scale: game.view.scale, viewOffset: game.view.offset, objects: []};
+        let serializedState = JSON.stringify(stateObj);
+
+        let serializedObjects = "[";
+        game.objects.forEach(obj => {
+            serializedObjects += obj.serialize() + ",";
+        });
+        serializedObjects = serializedObjects.slice(0, -1);
+        serializedObjects += "]";
+
+        serializedState = serializedState.replace("[]", serializedObjects);
+
+        localStorage.setItem('boardState', serializedState);
+
+        const date = new Date();
+        info.textContent = "Saved at: " + date.toISOString();
     }
 
     function resize() {

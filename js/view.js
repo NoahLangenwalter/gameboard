@@ -15,6 +15,11 @@ export class View {
         this.ctx.setTransform(this.scale, 0, 0, this.scale, this.#offset.x, this.#offset.y)
     }
 
+    setUp(offset, scale) {
+        this.#offset = offset;
+        this.#scale = scale;
+    }
+
     pan(amount) {
         // this.update();
         this.#offset.x += amount.x;

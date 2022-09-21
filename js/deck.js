@@ -8,14 +8,14 @@ export class Deck extends GameObject {
     returnsInProgress = 0;
     returningCards = [];
     empty = true;
+    cards = [];
 
-    constructor(game, isFaceUp, numberOfCards, startX = 0, startY = 0, startZ = 0) {
+    constructor(game, isFaceUp = false, startX = 0, startY = 0, startZ = 0) {
         super(game, startX, startY, startZ);
 
         this.isFaceUp = isFaceUp;
         this.width = 250;
         this.height = 350;
-        this.numberOfCards = numberOfCards;
 
         this.faceUpIcon = document.getElementById("faceUpIcon");
         this.faceDownIcon = document.getElementById("faceDownIcon");
@@ -27,7 +27,6 @@ export class Deck extends GameObject {
             shuffling: new ShuffleAnimation()
         };
 
-        this.build(numberOfCards);
     }
 
     get isInteractable() {
@@ -259,18 +258,6 @@ export class Deck extends GameObject {
         }
     }
 
-    build = (numberOfCards) => {
-        this.cards = [];
-
-        for (let i = 1; i < numberOfCards + 1; i++) {
-            this.returnCard(new Card(this.game, i));
-        }
-
-        this.shuffle();
-
-        this.empty = numberOfCards === 0;
-    }
-
     handleDrawn = () => {
         this.drawsInProgress--;
     }
@@ -295,6 +282,28 @@ export class Deck extends GameObject {
     handleFlipMidpoint(isFaceUp) {
         this.isFaceUp = isFaceUp;
         this.cards.reverse();
+    }
+
+    static serializableProperties = ["isFaceUp", "empty", "cards"];
+    serialize() {
+        const propsToSerialize = [...GameObject.serializableProperties, ...Deck.serializableProperties, ...Card.serializableProperties];
+
+        return JSON.stringify(this, propsToSerialize, 0);
+    }
+
+    deserialize(object) {
+        
+        object.cards.forEach(cardObj => {
+            const card = new Card(this.game);
+            card.deserialize(cardObj);
+            card.deck = this;
+            card.inDeck = true;
+            this.cards.push(card);
+        });
+
+        delete object.cards;
+
+        Object.assign(this, object);
     }
 }
 

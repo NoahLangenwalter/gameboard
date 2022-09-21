@@ -331,6 +331,12 @@ export class Card extends GameObject {
     handleFlipMidpoint(isFaceUp) {
         this.isFaceUp = isFaceUp;
     }
+
+    static serializableProperties = ["isFaceUp", "content"];
+    serialize() {
+        const propsToSerialize = [...GameObject.serializableProperties, ...Card.serializableProperties];
+        return JSON.stringify(this, propsToSerialize, 0);
+    }
 }
 
 export class FlipAnimation extends AnimationData {
