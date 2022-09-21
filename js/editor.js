@@ -41,9 +41,7 @@ export class Editor {
         this.editBox.focus();
 
         setTimeout(() => {
-            const selection = window.getSelection();
-            selection.selectAllChildren(this.editBox);
-            selection.collapseToEnd();
+            this.moveCaretToEnd();
             this.editBox.addEventListener("input", this.onInput);
             this.editBox.addEventListener('paste', this.onPaste);
         }, 0);
@@ -78,8 +76,27 @@ export class Editor {
         this.editBox.style.lineHeight = this.editObj.lineHeight + "px";
     }
 
+    moveCaretToEnd() {
+        const selection = window.getSelection();
+        selection.selectAllChildren(this.editBox);
+        selection.collapseToEnd();
+    }
+
     onInput = (event) => {
         this.updateEditee();
+
+        //HACK: This is to fix an issue that occurs after removing all text and then writing again.
+        //      The first line of text gets no wrapping <div></div>.
+        //      This causes a newline to be missed by updateEditee().
+        //      A better fix would be to refactor updateEditee() to be more intelligent about enclosing divs and adjacent naked lines. 
+        if (this.editBox.innerHTML.length === 1) {
+            this.editBox.innerHTML = `<div>${this.editBox.innerHTML}</div>`;
+            this.moveCaretToEnd();
+        }
+        if (this.editBox.innerHTML === "<br><div><br></div>") {
+            this.editBox.innerHTML = "<div><br></div><div><br></div>";
+            this.moveCaretToEnd();
+        }
     }
 
     onPaste = (event) => {
