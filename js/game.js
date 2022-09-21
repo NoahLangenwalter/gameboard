@@ -1,5 +1,6 @@
 import { View } from "./view.js";
 import { Card } from "./card.js";
+import { Deck } from "./deck.js";
 import { Editor } from "./editor.js";
 
 export class Game {
@@ -27,7 +28,7 @@ export class Game {
     get editTarget() {
         return this.selected.values().next().value;
     }
-    
+
     set creator(val) {
         this.create = val;
     }
@@ -175,7 +176,7 @@ export class Game {
     }
 
     enterCreateMode() {
-        if(this.mode === Mode.Edit) {
+        if (this.mode === Mode.Edit) {
             this.editor.end();
         }
         this.mode = Mode.Create;
@@ -193,6 +194,82 @@ export class Game {
             this.create.completeCreationAt(screenPos);
             this.mode = Mode.Play;
         }
+    }
+
+    copy() {
+        if (this.selected.size === 0) {
+            return;
+        }
+
+        const copied = {center: {x: 0, y: 0}, objects: []};
+
+        const min = {x: Number.MAX_SAFE_INTEGER, y: Number.MAX_SAFE_INTEGER};
+        const max = {x: Number.MIN_SAFE_INTEGER, y: Number.MIN_SAFE_INTEGER};
+        
+        let serializedObjects = "[";
+        for (const obj of this.selected.values()) {
+            serializedObjects += obj.serialize() + ",";
+            
+            min.x = Math.min(obj.x, min.x);
+            min.y = Math.min(obj.y, min.y);
+            max.x = Math.max(obj.right, max.x);
+            max.y = Math.max(obj.bottom, max.y);
+        }
+        
+        serializedObjects = serializedObjects.slice(0, -1);
+        serializedObjects += "]";
+
+        copied.center.x = min.x + (max.x - min.x) / 2;
+        copied.center.y = min.y + (max.y - min.y) / 2;
+
+        let serializedState = JSON.stringify(copied);
+        serializedState = serializedState.replace("[]", serializedObjects);
+
+        localStorage.setItem('copied', serializedState);
+
+        const date = new Date();
+        // info.textContent = "Copied at: " + date.toISOString();
+    }
+
+    paste(newCenter = null) {
+
+        //get from localStorage
+        const copiedData = localStorage.getItem("copied");
+
+        if (copiedData) {
+            const copied = JSON.parse(copiedData);
+
+            // center on mouse
+            const centerOffset = {x: 0, y: 0}; 
+            if(newCenter !== null) {
+                centerOffset.x = newCenter.x - copied.center.x;
+                centerOffset.y = newCenter.y - copied.center.y;
+            }
+
+            if (copied.objects.length > 0) {
+                this.clearSelection();
+            }
+
+            // create objects
+            const topZ = this.nextZ;
+            copied.objects.forEach(obj => {
+                obj.x += centerOffset.x;
+                obj.y += centerOffset.y;
+                obj.z += topZ;
+
+                const original_class = eval(obj.className);
+
+                const classedObj = new original_class(this);
+
+                classedObj.deserialize(obj);
+
+                this.addObject(classedObj, classedObj.z);
+
+                //select copied
+                this.selectObject(classedObj, true);
+            });
+        }
+
     }
 }
 

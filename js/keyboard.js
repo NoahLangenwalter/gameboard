@@ -34,12 +34,24 @@ export class Keyboard {
 
         if (this.game.mode === Mode.Play) {
             if (event.code === "KeyE" && event.ctrlKey) {
-                event.preventDefault();
                 this.game.enterEditMode();
             }
             else if (event.code === "KeyA" && event.ctrlKey) {
                 event.preventDefault();
                 this.game.selectAll();
+            }
+            else if (event.code === "KeyC" && event.ctrlKey) {
+                event.preventDefault();
+                this.game.copy();
+            }
+            else if (event.code === "KeyV" && event.ctrlKey) {
+                event.preventDefault();
+                if (event.altKey) {
+                    this.game.paste();
+                }
+                else {
+                    this.game.paste(this.game.view.toWorld(this.mouse.x, this.mouse.y));
+                }
             }
             else if (event.code === "KeyS" && event.ctrlKey) {
                 this.shuffleValidTargets();
