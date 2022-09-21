@@ -116,6 +116,14 @@ export class Game {
         object.deselect();
     }
 
+    selectAll() {
+        this.selected = new Set(this.objects);
+
+        this.objects.forEach(obj => {
+            obj.select();
+        });
+    }
+
     isSelected(object) {
         return this.selected.has(object);
     }

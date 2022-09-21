@@ -37,6 +37,10 @@ export class Keyboard {
                 event.preventDefault();
                 this.game.enterEditMode();
             }
+            else if (event.code === "KeyA" && event.ctrlKey) {
+                event.preventDefault();
+                this.game.selectAll();
+            }
             else if (event.code === "KeyS" && event.ctrlKey) {
                 this.shuffleValidTargets();
             }
@@ -47,46 +51,50 @@ export class Keyboard {
                 this.deleteValidTargets();
             }
             else if (this.mouse.isTargeting) {
-                if (event.code === "KeyD" && event.ctrlKey) {
-                    this.mouse.performTargetedAction();
-                }
-                else if (event.code === "Escape") {
-                    this.mouse.cancelTargeting();
-                }
-                else if (this.numerics.includes(event.key)) {
-                    if (event.key === "`") {
-                        this.mouse.drawCount = 0;
-                    }
-                    else if (event.key === "0") {
-                        this.mouse.drawCount = 10;
-                    }
-                    else {
-                        this.mouse.drawCount = parseInt(event.key);
-                    }
-                }
-                else if (event.code.startsWith("Arrow")) {
-                    if (event.code.includes("Up")) {
-                        this.mouse.targetOrientation = DrawOrientation.Vertical;
-                        this.mouse.targetSpacing = DrawSpacing.Spread;
-                    }
-                    else if (event.code.includes("Down")) {
-                        this.mouse.targetOrientation = DrawOrientation.Vertical;
-                        this.mouse.targetSpacing = DrawSpacing.Stacked;
-                    }
-                    else if (event.code.includes("Right")) {
-                        this.mouse.targetOrientation = DrawOrientation.Horizontal;
-                        this.mouse.targetSpacing = DrawSpacing.Spread;
-                    }
-                    else if (event.code.includes("Left")) {
-                        this.mouse.targetOrientation = DrawOrientation.Horizontal;
-                        this.mouse.targetSpacing = DrawSpacing.Stacked;
-                    }
-                }
+                this.handleTargetingCommands(event);
             }
         }
         else if (this.game.mode === Mode.Create) {
             if (event.code === "Escape") {
                 this.game.cancelCreate();
+            }
+        }
+    }
+
+    handleTargetingCommands(event) {
+        if (event.code === "KeyD" && event.ctrlKey) {
+            this.mouse.performTargetedAction();
+        }
+        else if (event.code === "Escape") {
+            this.mouse.cancelTargeting();
+        }
+        else if (this.numerics.includes(event.key)) {
+            if (event.key === "`") {
+                this.mouse.drawCount = 0;
+            }
+            else if (event.key === "0") {
+                this.mouse.drawCount = 10;
+            }
+            else {
+                this.mouse.drawCount = parseInt(event.key);
+            }
+        }
+        else if (event.code.startsWith("Arrow")) {
+            if (event.code.includes("Up")) {
+                this.mouse.targetOrientation = DrawOrientation.Vertical;
+                this.mouse.targetSpacing = DrawSpacing.Spread;
+            }
+            else if (event.code.includes("Down")) {
+                this.mouse.targetOrientation = DrawOrientation.Vertical;
+                this.mouse.targetSpacing = DrawSpacing.Stacked;
+            }
+            else if (event.code.includes("Right")) {
+                this.mouse.targetOrientation = DrawOrientation.Horizontal;
+                this.mouse.targetSpacing = DrawSpacing.Spread;
+            }
+            else if (event.code.includes("Left")) {
+                this.mouse.targetOrientation = DrawOrientation.Horizontal;
+                this.mouse.targetSpacing = DrawSpacing.Stacked;
             }
         }
     }
