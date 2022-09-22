@@ -258,6 +258,16 @@ export class Deck extends GameObject {
         }
     }
 
+    loadCards = (cards) => {
+        for (let i = 0; i < cards.length; i++) {
+            const card = cards[i];
+            card.addToDeck(this, 0, false);
+            this.cards.unshift(card);
+        }
+
+        this.empty = this.cards.length === 0;
+    }
+
     handleDrawn = () => {
         this.drawsInProgress--;
     }

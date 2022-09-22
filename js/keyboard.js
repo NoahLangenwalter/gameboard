@@ -7,9 +7,10 @@ export class Keyboard {
     reservedCombos = ["KeyS", "KeyF", "KeyE", "KeyD", "Backquote", "Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9", "Digit0"];
     ignored = ["ControlLeft", "ControlRight", "ShiftLeft", "ShiftRight"];
     numerics = ["`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
-    constructor(game, mouse) {
+    constructor(game, mouse, saveFunction) {
         this.game = game;
         this.mouse = mouse;
+        this.save = saveFunction;
 
         window.addEventListener("keydown", this.onKeyDown);
         // this.game.canvas.addEventListener("keyup", this.onKeyUp);
@@ -54,9 +55,12 @@ export class Keyboard {
                 }
             }
             else if (event.code === "KeyS" && event.ctrlKey) {
+                this.save();
+            }
+            else if (event.code === "KeyS") {
                 this.shuffleValidTargets();
             }
-            else if (event.code === "KeyF" && event.ctrlKey) {
+            else if (event.code === "KeyF") {
                 this.flipValidTargets();
             }
             else if (event.code === "Delete") {
@@ -74,7 +78,7 @@ export class Keyboard {
     }
 
     handleTargetingCommands(event) {
-        if (event.code === "KeyD" && event.ctrlKey) {
+        if (event.code === "KeyD") {
             this.mouse.performTargetedAction();
         }
         else if (event.code === "Escape") {

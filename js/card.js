@@ -295,21 +295,30 @@ export class Card extends GameObject {
         }
     }
 
-    addToDeck = (deck, delay = 0) => {
+    addToDeck = (deck, delay = 0, animate = true) => {
         this.moving = true;
-        
+
         this.game.deselectObject(this);
         this.deck = deck;
 
-        setTimeout(() => {
-            this.animations.moving.start(250, this._x, this._y, this.deck.x, this.deck.y, true);
+        if (animate) {
+            setTimeout(() => {
+                this.animations.moving.start(250, this._x, this._y, this.deck.x, this.deck.y, true);
 
+                this.x = this.deck.x;
+                this.y = this.deck.y;
+                if (this.isFaceUp !== this.deck.isFaceUp) {
+                    this.flip();
+                }
+            }, delay);
+        }
+        else {
             this.x = this.deck.x;
             this.y = this.deck.y;
-            if (this.isFaceUp !== this.deck.isFaceUp) {
-                this.flip();
-            }
-        }, delay);
+            this.isFaceUp = this.deck.isFaceUp
+            this.moving = false;
+            this.inDeck = true;
+        }
     }
 
     activate() {

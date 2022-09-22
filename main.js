@@ -16,7 +16,7 @@ window.onload = function () {
     const create = new Create(game);
     game.creator = create;
     const mouse = new Mouse(game);
-    const keyboard = new Keyboard(game, mouse);
+    const keyboard = new Keyboard(game, mouse, saveState);
 
     function animate() {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -63,35 +63,8 @@ window.onload = function () {
                 game.addObject(classedObj, classedObj.z);
             });
         }
-        else {
-            loadPlayingCards();
-        }
 
         requestAnimationFrame(animate);
-    }
-
-    function loadPlayingCards() {
-        const centerPos = game.view.toWorld(window.innerWidth / 2, window.innerHeight / 2);
-        centerPos.x -= 250 / 2;
-        centerPos.y -= 350 / 2
-        const drawPile = new Deck(game, false, centerPos.x, centerPos.y, 1)
-        game.addObject(drawPile);
-
-        const suits = ["❤️", "♠️", "🔶", "♣️"];
-        const values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
-
-        const cards = [];
-
-        suits.forEach(suit => {
-            values.forEach(value => {
-                const content = value + "\n" + suit;
-                const card = new Card(game, content, false, centerPos.x, centerPos.y);
-                cards.push(card);
-                game.addObject(card);
-            });
-        });
-
-        drawPile.returnCards(cards);
     }
 
     function saveState() {
@@ -110,7 +83,7 @@ window.onload = function () {
         localStorage.setItem('boardState', serializedState);
 
         const date = new Date();
-        info.textContent = "Saved at: " + date.toISOString();
+        // info.textContent = "Saved at: " + date.toISOString();
     }
 
     function resize() {

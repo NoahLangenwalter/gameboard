@@ -66,7 +66,7 @@ export class Create {
             this.createDeckAt(worldPos);
         }
         else if (this.#selected === "BOARD") {
-
+            this.createPlayingCardDeckAt(worldPos);
         }
 
         this.clearSelection();
@@ -88,5 +88,28 @@ export class Create {
         worldPos.y -= 350/ 2;
         const deck = new Deck(this.game, false, worldPos.x, worldPos.y, this.game.nextZ);
         this.game.addObject(deck);
+    }
+
+    createPlayingCardDeckAt(worldPos) {
+        worldPos.x -= 250/ 2; //TODO: Refactor?
+        worldPos.y -= 350/ 2;
+
+        const drawPile = new Deck(this.game, false, worldPos.x, worldPos.y, this.game.nextZ);
+        this.game.addObject(drawPile);
+
+        const suits = ["❤️", "♣️", "🔶", "♠️"];
+        const values = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+
+        const cards = [];
+
+        suits.forEach(suit => {
+            values.forEach(value => {
+                const content = value + "\n" + suit;
+                const card = new Card(this.game, content, false, worldPos.x, worldPos.y);
+                cards.push(card);
+            });
+        });
+
+        drawPile.loadCards(cards);
     }
 }
