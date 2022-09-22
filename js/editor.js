@@ -62,13 +62,18 @@ export class Editor {
 
     updateEditee() {
         let newText = this.editBox.innerHTML;
-        newText = newText.replaceAll("<br>", "");
-        newText = newText.replaceAll("</div><div>", "<br>");
-        newText = newText.replaceAll("<div></div>", "<br>");
-        newText = newText.replaceAll("<div>", "")
-        newText = newText.replaceAll("</div>", "")
-        newText = newText.replaceAll("<br>", "\n");
-        newText = newText.replaceAll("&nbsp;", " ");
+        if (newText === "<div><br></div>") {
+            newText = "";
+        }
+        else {
+            newText = newText.replaceAll("<br>", "");
+            newText = newText.replaceAll("</div><div>", "<br>");
+            newText = newText.replaceAll("<div></div>", "<br>");
+            newText = newText.replaceAll("<div>", "")
+            newText = newText.replaceAll("</div>", "")
+            newText = newText.replaceAll("<br>", "\n");
+            newText = newText.replaceAll("&nbsp;", " ");
+        }
 
         this.editObj.content = newText;
 
