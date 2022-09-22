@@ -1,5 +1,6 @@
 import { GameObject } from "./gameObject.js";
 import { AnimationData } from "./animationData.js";
+import { Text } from "./text.js";
 
 export class Card extends GameObject {
     isEditing = false
@@ -14,8 +15,8 @@ export class Card extends GameObject {
         this.isFaceUp = isFaceUp;
         this.width = 250;
         this.height = 350;
-        this.maxTextHeight = this.height * 0.85;
-        this.maxTextWidth = this.width * 0.85;
+        this.maxTextHeight = 297; //this.height * 0.85;
+        this.maxTextWidth = 212; //this.width * 0.85;
 
         this.content = content.toString();
 
@@ -51,7 +52,12 @@ export class Card extends GameObject {
     get content() { return this.#content; }
     set content(val) {
         this.#content = val;
-        this.formatContent();
+
+        const formatted = Text.formatContent(this.game.ctx, val, this.game.font, this.maxTextWidth, this.maxTextHeight);
+        this.fontSize = formatted.fontSize;
+        this.lineHeight = formatted.lineHeight;
+        this.lines = formatted.lines;
+        this.font = `${formatted.fontSize}px ${this.game.font}`;
     }
     get lineCount() { return this.lines.length }
 
@@ -167,112 +173,6 @@ export class Card extends GameObject {
             context.fillText(this.lines[i], this.x + this.width / 2, this.y + this.height / 2 + currentYOffset + this.lineHeight / 2);
             currentYOffset += this.lineHeight;
         }
-    }
-
-    formatContent() {
-        const context = this.game.ctx;
-        const lineHeightMultiplier = 1.25;
-
-        this.fontSize = 200;
-        this.font = `${this.fontSize}px ${this.game.font}`;
-        context.font = this.font;
-        this.lineHeight = context.measureText("M").width * lineHeightMultiplier;
-        this.fontTooBig = false;
-
-        this.lines = this.generateLines(context);
-
-        while (this.fontTooBig || this.lines.length * this.lineHeight > this.maxTextHeight) {
-            this.fontTooBig = false;
-            this.fontSize -= Math.ceil(this.fontSize / 50);
-            this.font = `${this.fontSize}px ${this.game.font}`;
-            context.font = this.font;
-
-            this.lineHeight = context.measureText("M").width * lineHeightMultiplier;
-
-            this.lines = this.generateLines(context);
-        }
-
-        this.lineHeight = this.maxTextHeight / this.lines.length;
-    }
-
-    generateLines(context) {
-        let wordsInLine = 0;
-        const lines = [];
-        const charLimit = 10;
-
-        let rawLines = this.#content.split("\n");
-        for (let i = 0; i < rawLines.length; i++) {
-            let line = "";
-            let words = rawLines[i].split(" ");
-            for (let j = 0; j < words.length; j++) {
-                let word = words[j];
-
-                //break word into two
-                if (!this.textFits(context, word) && word.length > charLimit) {
-                    const newWord = word.slice(charLimit);
-                    words.splice(j + 1, 0, newWord);
-                    word = words[j] = word.slice(0, charLimit);
-                }
-
-                //still too big? Reduce font
-                if (!this.textFits(context, word)) {
-                    this.fontTooBig = true;
-                    return;
-                }
-
-                let testLine = line;
-                if (wordsInLine > 0) { testLine += " "; }
-                testLine += word;
-
-                if (this.textFits(context, testLine)) {
-                    line = testLine;
-                    wordsInLine++;
-                }
-                else {
-                    //line would be too wide with added word
-
-                    //if the trial line wasn't that long, trigger a fontSize reduction
-                    if (testLine.length < 6) {
-                        this.fontTooBig = true;
-                        return;
-                    }
-
-                    lines.push(line);
-                    line = word;
-                    wordsInLine = 1;
-                }
-            }
-
-            if (wordsInLine === 1) {
-                let lastWord = line;
-                while (lastWord !== null) {
-                    lastWord = null;
-                    //break last word into two
-                    if (!this.textFits(context, line) && line.length > charLimit) {
-                        lastWord = line.slice(charLimit);
-                        line = word.slice(0, charLimit);
-                        lines.push(line);
-                        line = lastWord;
-                    }
-
-                    //still too big? Reduce font
-                    if (!this.textFits(context, line)) {
-                        this.fontTooBig = true;
-                        return;
-                    }
-                }
-            }
-
-            lines.push(line);
-            wordsInLine = 0;
-        }
-
-        return lines;
-    }
-
-    textFits(context, text, widthMultiplier = 1) {
-        let textWidth = context.measureText(text).width * widthMultiplier;
-        return textWidth < this.maxTextWidth;
     }
 
     play = (targetPosition = null, animate = true) => {

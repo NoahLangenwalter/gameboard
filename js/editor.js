@@ -72,7 +72,7 @@ export class Editor {
 
         this.editObj.content = newText;
 
-        this.editBox.style.fontSize = this.editObj.fontSize;
+        this.editBox.style.fontSize = this.editObj.fontSize + "px";
         this.editBox.style.lineHeight = this.editObj.lineHeight + "px";
     }
 
