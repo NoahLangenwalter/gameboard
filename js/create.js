@@ -17,6 +17,8 @@ export class Create {
         this.emptyDeckButton.addEventListener("click", this.handleEmptyDeckClick);
         this.playingCardDeckButton = document.getElementById("createPlayingCardDeckButton");
         this.playingCardDeckButton.addEventListener("click", this.handlePlayingCardDeckClick);
+        this.dieButton = document.getElementById("createDieButton");
+        this.dieButton.addEventListener("click", this.handleDieClick);
         this.boardButton = document.getElementById("createBoardButton");
         this.boardButton.addEventListener("click", this.handleBoardClick);
     }
@@ -33,12 +35,16 @@ export class Create {
         this.cardButton.classList.remove("selected");
         this.emptyDeckButton.classList.remove("selected");
         this.playingCardDeckButton.classList.remove("selected");
+        this.dieButton.classList.remove("selected");
         this.boardButton.classList.remove("selected");
 
         this.#selected = "NONE";
 
+        this.noteButton.blur();
         this.cardButton.blur();
         this.emptyDeckButton.blur();
+        this.playingCardDeckButton.blur();
+        this.dieButton.blur();
         this.boardButton.blur();
     }
 
@@ -70,6 +76,13 @@ export class Create {
         this.game.enterCreateMode();
     }
 
+    handleDieClick = () => {
+        this.clearSelection();
+        this.#selected = "DIE";
+        this.dieButton.classList.add("selected");
+        this.game.enterCreateMode();
+    }
+
     handleBoardClick = () => {
         this.clearSelection();
         this.#selected = "BOARD";
@@ -93,6 +106,8 @@ export class Create {
             this.createPlayingCardDeckAt(worldPos);
         }
         else if (this.#selected === "BOARD") {
+        }
+        else if (this.#selected === "DIE") {
         }
 
         this.clearSelection();
