@@ -1,5 +1,6 @@
 import { Card } from "./js/card.js";
 import { Deck } from "./js/deck.js";
+import { Note } from "./js/note.js";
 import { Game } from "./js/game.js";
 import { Mouse } from "./js/mouse.js";
 import { Keyboard } from "./js/keyboard.js";

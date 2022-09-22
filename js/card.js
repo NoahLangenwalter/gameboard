@@ -15,8 +15,8 @@ export class Card extends GameObject {
         this.isFaceUp = isFaceUp;
         this.width = 250;
         this.height = 350;
-        this.maxTextHeight = 297; //this.height * 0.85;
-        this.maxTextWidth = 212; //this.width * 0.85;
+        this.maxTextHeight = Math.floor(this.height * 0.85);
+        this.maxTextWidth = Math.floor(this.width * 0.85);
 
         this.content = content.toString();
 

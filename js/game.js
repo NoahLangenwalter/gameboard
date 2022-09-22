@@ -1,6 +1,7 @@
 import { View } from "./view.js";
 import { Card } from "./card.js";
 import { Deck } from "./deck.js";
+import { Note } from "./note.js";
 import { Editor } from "./editor.js";
 
 export class Game {

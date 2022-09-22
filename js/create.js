@@ -1,5 +1,6 @@
 import { Card } from './card.js';
 import { Deck } from './deck.js';
+import { Note } from './note.js';
 
 export class Create {
     #selected = "NONE";
@@ -8,10 +9,14 @@ export class Create {
         this.game = game;
 
         document.getElementById("createToggleButton").addEventListener("click", this.toggleCreateMenu);
+        this.noteButton = document.getElementById("createNoteButton");
+        this.noteButton.addEventListener("click", this.handleNoteClick);
         this.cardButton = document.getElementById("createCardButton");
         this.cardButton.addEventListener("click", this.handleCardClick);
-        this.deckButton = document.getElementById("createDeckButton");
-        this.deckButton.addEventListener("click", this.handleDeckClick);
+        this.emptyDeckButton = document.getElementById("createEmptyDeckButton");
+        this.emptyDeckButton.addEventListener("click", this.handleEmptyDeckClick);
+        this.playingCardDeckButton = document.getElementById("createPlayingCardDeckButton");
+        this.playingCardDeckButton.addEventListener("click", this.handlePlayingCardDeckClick);
         this.boardButton = document.getElementById("createBoardButton");
         this.boardButton.addEventListener("click", this.handleBoardClick);
     }
@@ -24,15 +29,24 @@ export class Create {
     }
 
     clearSelection() {
+        this.noteButton.classList.remove("selected");
         this.cardButton.classList.remove("selected");
-        this.deckButton.classList.remove("selected");
+        this.emptyDeckButton.classList.remove("selected");
+        this.playingCardDeckButton.classList.remove("selected");
         this.boardButton.classList.remove("selected");
 
         this.#selected = "NONE";
 
         this.cardButton.blur();
-        this.deckButton.blur();
+        this.emptyDeckButton.blur();
         this.boardButton.blur();
+    }
+
+    handleNoteClick = () =>  {
+        this.clearSelection();
+        this.#selected = "NOTE";
+        this.noteButton.classList.add("selected");
+        this.game.enterCreateMode();
     }
 
     handleCardClick = () =>  {
@@ -42,10 +56,17 @@ export class Create {
         this.game.enterCreateMode();
     }
 
-    handleDeckClick = () =>  {
+    handleEmptyDeckClick = () =>  {
         this.clearSelection();
-        this.#selected = "DECK";
-        this.deckButton.classList.add("selected");
+        this.#selected = "EMPTY_DECK";
+        this.emptyDeckButton.classList.add("selected");
+        this.game.enterCreateMode();
+    }
+
+    handlePlayingCardDeckClick = () =>  {
+        this.clearSelection();
+        this.#selected = "PLAYING_CARD_DECK";
+        this.playingCardDeckButton.classList.add("selected");
         this.game.enterCreateMode();
     }
 
@@ -59,17 +80,33 @@ export class Create {
     completeCreationAt(screenPos) {
         const worldPos = this.game.view.toWorld(screenPos.x, screenPos.y);
 
-        if (this.#selected === "CARD") {
+        if (this.#selected === "NOTE") {
+            this.createNoteAt(worldPos);
+        }
+        else if (this.#selected === "CARD") {
             this.createCardAt(worldPos);
         }
-        else if (this.#selected === "DECK") {
+        else if (this.#selected === "EMPTY_DECK") {
             this.createDeckAt(worldPos);
         }
-        else if (this.#selected === "BOARD") {
+        else if (this.#selected === "PLAYING_CARD_DECK") {
             this.createPlayingCardDeckAt(worldPos);
+        }
+        else if (this.#selected === "BOARD") {
         }
 
         this.clearSelection();
+    }
+
+    createNoteAt(worldPos) {
+        worldPos.x -= 300/ 2; //TODO: Refactor?
+        worldPos.y -= 300/ 2;
+        const note = new Note(this.game, "", 300, 300, worldPos.x, worldPos.y, this.game.nextZ);
+        this.game.addObject(note);
+
+        setTimeout(() => {
+            this.game.enterEditMode();
+        }, 100);
     }
 
     createCardAt(worldPos) {
