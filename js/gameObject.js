@@ -7,8 +7,8 @@ export class GameObject {
     selected = false;
     isCardTarget = false;
     isEditable = false;
-    isShuffleable = false;
-    isFlippable = true;
+    isRandomizable = false;
+    isFlippable = false;
 
     constructor(game, startX = 0, startY = 0, startZ = -1) {
         this.className = this.constructor.name;
@@ -104,6 +104,8 @@ export class GameObject {
         let cR = this.cornerRadius * 2;
         context.lineWidth = cR;
         context.shadowColor = "black";
+        context.strokeStyle = "black";  
+        context.lineJoin = "round";
 
         if (dragging) {
             //TODO: Performance - don't use shadowBlur
@@ -117,7 +119,7 @@ export class GameObject {
             context.shadowOffsetY = 0
         }
 
-        context.strokeRect(this.x + (cR / 2) + 5, this.y + (cR / 2) + 5, this.width - cR - 10, this.height - cR - 10);
+        context.strokeRect(this.x + (cR / 2) + 7, this.y + (cR / 2) + 7, this.width - cR - 14, this.height - cR - 14);
         context.shadowBlur = 0;
         context.shadowOffsetX = 0;
         context.shadowOffsetY = 0;

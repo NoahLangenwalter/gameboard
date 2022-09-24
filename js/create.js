@@ -1,6 +1,7 @@
 import { Card } from './card.js';
 import { Deck } from './deck.js';
 import { Note } from './note.js';
+import { Die } from './die.js';
 
 export class Create {
     #selected = "NONE";
@@ -48,28 +49,28 @@ export class Create {
         this.boardButton.blur();
     }
 
-    handleNoteClick = () =>  {
+    handleNoteClick = () => {
         this.clearSelection();
         this.#selected = "NOTE";
         this.noteButton.classList.add("selected");
         this.game.enterCreateMode();
     }
 
-    handleCardClick = () =>  {
+    handleCardClick = () => {
         this.clearSelection();
         this.#selected = "CARD";
         this.cardButton.classList.add("selected");
         this.game.enterCreateMode();
     }
 
-    handleEmptyDeckClick = () =>  {
+    handleEmptyDeckClick = () => {
         this.clearSelection();
         this.#selected = "EMPTY_DECK";
         this.emptyDeckButton.classList.add("selected");
         this.game.enterCreateMode();
     }
 
-    handlePlayingCardDeckClick = () =>  {
+    handlePlayingCardDeckClick = () => {
         this.clearSelection();
         this.#selected = "PLAYING_CARD_DECK";
         this.playingCardDeckButton.classList.add("selected");
@@ -105,17 +106,18 @@ export class Create {
         else if (this.#selected === "PLAYING_CARD_DECK") {
             this.createPlayingCardDeckAt(worldPos);
         }
-        else if (this.#selected === "BOARD") {
-        }
         else if (this.#selected === "DIE") {
+            this.createDieAt(worldPos);
+        }
+        else if (this.#selected === "BOARD") {
         }
 
         this.clearSelection();
     }
 
     createNoteAt(worldPos) {
-        worldPos.x -= 300/ 2; //TODO: Refactor?
-        worldPos.y -= 300/ 2;
+        worldPos.x -= 300 / 2; //TODO: Refactor?
+        worldPos.y -= 300 / 2;
         const note = new Note(this.game, "", 300, 300, worldPos.x, worldPos.y, this.game.nextZ);
         this.game.addObject(note);
 
@@ -125,8 +127,8 @@ export class Create {
     }
 
     createCardAt(worldPos) {
-        worldPos.x -= 250/ 2; //TODO: Refactor?
-        worldPos.y -= 350/ 2;
+        worldPos.x -= 250 / 2; //TODO: Refactor?
+        worldPos.y -= 350 / 2;
         const card = new Card(this.game, "", true, worldPos.x, worldPos.y, this.game.nextZ);
         this.game.addObject(card);
 
@@ -136,15 +138,22 @@ export class Create {
     }
 
     createDeckAt(worldPos) {
-        worldPos.x -= 250/ 2; //TODO: Refactor?
-        worldPos.y -= 350/ 2;
+        worldPos.x -= 250 / 2; //TODO: Refactor?
+        worldPos.y -= 350 / 2;
         const deck = new Deck(this.game, false, worldPos.x, worldPos.y, this.game.nextZ);
         this.game.addObject(deck);
     }
+    
+    createDieAt(worldPos) {
+        worldPos.x -= 60 / 2; //TODO: Refactor?
+        worldPos.y -= 60 / 2;
+        const die = new Die(this.game, 6, worldPos.x, worldPos.y, this.game.nextZ);
+        this.game.addObject(die);
+    }
 
     createPlayingCardDeckAt(worldPos) {
-        worldPos.x -= 250/ 2; //TODO: Refactor?
-        worldPos.y -= 350/ 2;
+        worldPos.x -= 250 / 2; //TODO: Refactor?
+        worldPos.y -= 350 / 2;
 
         const drawPile = new Deck(this.game, false, worldPos.x, worldPos.y, this.game.nextZ);
         this.game.addObject(drawPile);

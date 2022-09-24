@@ -388,12 +388,12 @@ export class Mouse {
         if (this.game.isSelectionEditable()) {
             this.game.enterEditMode();
         }
-        else if (this.game.isSelectionShuffleable()) {
+        else if (this.game.isSelectionRandomizable()) {
             if (event.ctrlKey) {
                 this.game.selected.drawCard(null, true);
             }
             else {
-                this.game.selected.forEach(obj => { obj.shuffle() });
+                this.game.selected.forEach(obj => { obj.randomize() });
             }
         }
     }

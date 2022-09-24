@@ -18,23 +18,9 @@ export class Note extends GameObject {
         this.content = content.toString();
 
         this.isEditable = true;
-        this.isFlippable = false;
 
         this.cornerRadius = 2;
     }
-
-    get x() {
-        return this.inDeck && !this.shuffling ? this.deck.x : this._x;
-    }
-    get y() {
-        return this.inDeck && !this.shuffling ? this.deck.y : this._y;
-    }
-    get z() {
-        return this.inDeck && !this.shuffling ? this.deck.z : this._z;
-    }
-    set x(v) { this._x = v }
-    set y(v) { this._y = v }
-    set z(v) { this._z = v }
 
     get isInteractable() {
         return true;

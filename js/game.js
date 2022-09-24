@@ -1,6 +1,7 @@
 import { View } from "./view.js";
 import { Card } from "./card.js";
 import { Deck } from "./deck.js";
+import { Die } from "./die.js";
 import { Note } from "./note.js";
 import { Editor } from "./editor.js";
 
@@ -147,13 +148,13 @@ export class Game {
         return this.editTarget.isEditable && (!(this.editTarget instanceof Card) || this.editTarget.isFaceUp);
     }
 
-    isSelectionShuffleable() {
+    isSelectionRandomizable() {
         if (this.selected.size === 0) {
             return false;
         }
 
         for (const obj of this.selected.values()) {
-            if (!obj.isShuffleable) {
+            if (!obj.isRandomizable) {
                 return false;
             }
         }
@@ -202,21 +203,21 @@ export class Game {
             return;
         }
 
-        const copied = {center: {x: 0, y: 0}, objects: []};
+        const copied = { center: { x: 0, y: 0 }, objects: [] };
 
-        const min = {x: Number.MAX_SAFE_INTEGER, y: Number.MAX_SAFE_INTEGER};
-        const max = {x: Number.MIN_SAFE_INTEGER, y: Number.MIN_SAFE_INTEGER};
-        
+        const min = { x: Number.MAX_SAFE_INTEGER, y: Number.MAX_SAFE_INTEGER };
+        const max = { x: Number.MIN_SAFE_INTEGER, y: Number.MIN_SAFE_INTEGER };
+
         let serializedObjects = "[";
         for (const obj of this.selected.values()) {
             serializedObjects += obj.serialize() + ",";
-            
+
             min.x = Math.min(obj.x, min.x);
             min.y = Math.min(obj.y, min.y);
             max.x = Math.max(obj.right, max.x);
             max.y = Math.max(obj.bottom, max.y);
         }
-        
+
         serializedObjects = serializedObjects.slice(0, -1);
         serializedObjects += "]";
 
@@ -241,8 +242,8 @@ export class Game {
             const copied = JSON.parse(copiedData);
 
             // center on mouse
-            const centerOffset = {x: 0, y: 0}; 
-            if(newCenter !== null) {
+            const centerOffset = { x: 0, y: 0 };
+            if (newCenter !== null) {
                 centerOffset.x = newCenter.x - copied.center.x;
                 centerOffset.y = newCenter.y - copied.center.y;
             }

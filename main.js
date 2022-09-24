@@ -1,5 +1,6 @@
 import { Card } from "./js/card.js";
 import { Deck } from "./js/deck.js";
+import { Die } from "./js/die.js";
 import { Note } from "./js/note.js";
 import { Game } from "./js/game.js";
 import { Mouse } from "./js/mouse.js";
@@ -36,20 +37,10 @@ window.onload = function () {
     }
 
     function startGame() {
-        // const discard = new Deck(game, true, 4, 650, 250, 0);
-        // const drawPile = new Deck(game, false, 4, 250, 250, 1)
-        // const discard = new Deck(game, true, 0, 650, 250, 0);
-        // const drawPile = new Deck(game, false, 0, 250, 250, 1)
-        // game.addObject(discard);
-        // game.addObject(drawPile);
-        // game.addObject(new Card(game, "A", true, 1050, 200, 2));
-        // game.addObject(new Card(game, "B", true, 1050, 240, 3));
-        // game.addObject(new Card(game, "supercalifragilisticexpialidocious!", true, 0, 0, 5));
-
         document.getElementById("saveButton").addEventListener("click", saveState);
 
         const savedState = localStorage.getItem("boardState");
-        if(savedState) {
+        if (savedState) {
 
             const state = JSON.parse(savedState);
             game.view.setUp(state.viewOffset, state.scale);
@@ -69,17 +60,19 @@ window.onload = function () {
     }
 
     function saveState() {
-        const stateObj = {scale: game.view.scale, viewOffset: game.view.offset, objects: []};
+        const stateObj = { scale: game.view.scale, viewOffset: game.view.offset, objects: [] };
         let serializedState = JSON.stringify(stateObj);
 
-        let serializedObjects = "[";
-        game.objects.forEach(obj => {
-            serializedObjects += obj.serialize() + ",";
-        });
-        serializedObjects = serializedObjects.slice(0, -1);
-        serializedObjects += "]";
+        if (game.objects.length > 0) {
+            let serializedObjects = "[";
+            game.objects.forEach(obj => {
+                serializedObjects += obj.serialize() + ",";
+            });
+            serializedObjects = serializedObjects.slice(0, -1);
+            serializedObjects += "]";
 
-        serializedState = serializedState.replace("[]", serializedObjects);
+            serializedState = serializedState.replace("[]", serializedObjects);
+        }
 
         localStorage.setItem('boardState', serializedState);
 

@@ -25,6 +25,7 @@ export class Card extends GameObject {
             moving: new MovingAnimation(),
         }
         this.isEditable = true;
+        this.isFlippable = true;
         this.cardBack = document.getElementById("cardBack");
     }
 

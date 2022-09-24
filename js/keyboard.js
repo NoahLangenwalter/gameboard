@@ -58,7 +58,7 @@ export class Keyboard {
                 this.save();
             }
             else if (event.code === "KeyS") {
-                this.shuffleValidTargets();
+                this.randomizeValidTargets();
             }
             else if (event.code === "KeyF") {
                 this.flipValidTargets();
@@ -125,12 +125,12 @@ export class Keyboard {
         }
     }
 
-    shuffleValidTargets() {
+    randomizeValidTargets() {
         const targets = this.getActionTargets();
 
         for (let i = 0; i < targets.length; i++) {
-            if (targets[i].isShuffleable) {
-                targets[i].shuffle();
+            if (targets[i].isRandomizable) {
+                targets[i].randomize();
             }
         }
     }

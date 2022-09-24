@@ -20,7 +20,8 @@ export class Deck extends GameObject {
         this.faceUpIcon = document.getElementById("faceUpIcon");
         this.faceDownIcon = document.getElementById("faceDownIcon");
         this.isCardTarget = true;
-        this.isShuffleable = true;
+        this.isRandomizable = true;
+        this.isFlippable = true;
 
         this.animations = {
             flipping: new FlipAnimation(150),
@@ -196,6 +197,10 @@ export class Deck extends GameObject {
 
             return count >= this.cards.length;
         }
+    }
+
+    randomize = () => {
+        this.shuffle();
     }
 
     shuffle = () => {
