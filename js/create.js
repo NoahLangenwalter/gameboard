@@ -22,6 +22,14 @@ export class Create {
         this.dieButton.addEventListener("click", this.handleDieClick);
         this.boardButton = document.getElementById("createBoardButton");
         this.boardButton.addEventListener("click", this.handleBoardClick);
+
+        this.dieSides = 6;
+
+        this.diePane = document.getElementById("diePane");
+
+        for (const button of this.diePane.children) {
+            button.addEventListener("click", this.handleDieOptionClick);
+        }
     }
 
     get selected() { return this.#selected != "NONE" }
@@ -37,6 +45,7 @@ export class Create {
         this.emptyDeckButton.classList.remove("selected");
         this.playingCardDeckButton.classList.remove("selected");
         this.dieButton.classList.remove("selected");
+        this.diePane.classList.remove("open");
         this.boardButton.classList.remove("selected");
 
         this.#selected = "NONE";
@@ -81,6 +90,7 @@ export class Create {
         this.clearSelection();
         this.#selected = "DIE";
         this.dieButton.classList.add("selected");
+        this.diePane.classList.add("open");
         this.game.enterCreateMode();
     }
 
@@ -89,6 +99,15 @@ export class Create {
         this.#selected = "BOARD";
         this.boardButton.classList.add("selected");
         this.game.enterCreateMode();
+    }
+
+    handleDieOptionClick = (e) => {
+        this.dieSides = parseInt(e.currentTarget.value);
+        for (const button of this.diePane.children) {
+            button.classList.remove("selected");
+        }
+
+        e.currentTarget.classList.add("selected");
     }
 
     completeCreationAt(screenPos) {
@@ -143,11 +162,11 @@ export class Create {
         const deck = new Deck(this.game, false, worldPos.x, worldPos.y, this.game.nextZ);
         this.game.addObject(deck);
     }
-    
+
     createDieAt(worldPos) {
         worldPos.x -= 60 / 2; //TODO: Refactor?
         worldPos.y -= 60 / 2;
-        const die = new Die(this.game, 6, worldPos.x, worldPos.y, this.game.nextZ);
+        const die = new Die(this.game, this.dieSides, worldPos.x, worldPos.y, this.game.nextZ);
         this.game.addObject(die);
     }
 

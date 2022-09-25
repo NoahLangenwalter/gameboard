@@ -3,10 +3,12 @@ import { AnimationData } from "./animationData.js";
 import { Text } from "./text.js";
 
 export class Die extends GameObject {
+    #sides;
+
     constructor(game, sides = 6, startX = 0, startY = 0, startZ = 0) {
         super(game, startX, startY, startZ);
 
-        this.sides = sides;
+        this.#sides = sides;
         this.number = -1;
         this.width = 60;
         this.height = 60;
@@ -18,7 +20,16 @@ export class Die extends GameObject {
         this.animations = {
             rolling: new RollAnimation(this)
         }
-        this.spriteSheet = document.getElementById("d6Sprite");
+        this.spriteSheet = document.getElementById(`d${this.#sides}Sprites`);
+    }
+
+    get sides() {
+        return this.#sides;
+    }
+    set sides(val) {
+        this.#sides = val;
+        this.animations.rolling.sides = this.#sides;
+        this.spriteSheet = document.getElementById(`d${this.#sides}Sprites`);
     }
 
     get isInteractable() {
@@ -38,7 +49,7 @@ export class Die extends GameObject {
     }
 
     draw(context) {
-        // this.drawHighlight(context);
+        this.drawHighlight(context);
 
         this.game.view.apply();
 
@@ -46,10 +57,10 @@ export class Die extends GameObject {
 
         if (this.animations.rolling.status) {
             let anim = this.animations.rolling;
-            context.drawImage(this.spriteSheet, anim.frameX, 0, 160, 160, this.x - 10, this.y - 10, 80, 80);
+            context.drawImage(this.spriteSheet, anim.frameX, 0, 200, 200, this.x - 30, this.y - 30, 120, 120);
         }
         else {
-            context.drawImage(this.spriteSheet, 0, 0, 160, 160, this.x - 10, this.y - 10, 80, 80);
+            context.drawImage(this.spriteSheet, 0, 0, 200, 200, this.x - 30, this.y - 30, 120, 120);
             this.drawNumber(context);
         }
 
@@ -91,13 +102,13 @@ export class Die extends GameObject {
 }
 
 export class RollAnimation extends AnimationData {
-    constructor(die, duration = 1000, sprites = 6, frameSize = 160) {
+    constructor(die, duration = 1000, frames = 24, frameSize = 200) {
         super(duration);
 
         this.sides = die.sides;
         this.frameSize = frameSize;
-        this.sprites = sprites;
-        this.currentSprite = 6;
+        this.frames = frames;
+        this.currentFrame = frames;
     }
 
     start() {
@@ -109,16 +120,17 @@ export class RollAnimation extends AnimationData {
     update() {
         super.update();
 
-        const speed = (.5 - Math.abs(this.elapsedPercent - .5));
-        this.currentSprite += speed;
-        this.currentSprite = this.currentSprite > this.sprites ? 1 : this.currentSprite;
+        // const speed = .334;//(.5 - Math.abs(this.elapsedPercent - .5));
+        // this.currentFrame += speed;
+        // this.currentFrame = this.currentFrame > this.frames ? 0 : this.currentFrame;
+        this.currentFrame = Math.floor(this.elapsedPercent * this.frames);
 
-        this.frameX = Math.floor(this.currentSprite) * this.frameSize;
+        this.frameX = Math.floor(this.currentFrame) * this.frameSize;
     }
 
     end() {
         super.end();
-        this.currentSprite = 6;
+        this.currentFrame = this.frames;
     }
 
     #roll(min, max) {
