@@ -119,7 +119,7 @@ export class Keyboard {
         const targets = this.getActionTargets();
 
         for (let i = 0; i < targets.length; i++) {
-            if (targets[i].isFlippable) {
+            if (targets[i].isFlippable && targets[i].isInteractable) {
                 targets[i].flip();
             }
         }
@@ -129,7 +129,7 @@ export class Keyboard {
         const targets = this.getActionTargets();
 
         for (let i = 0; i < targets.length; i++) {
-            if (targets[i].isRandomizable) {
+            if (targets[i].isRandomizable && targets[i].isInteractable) {
                 targets[i].randomize();
             }
         }

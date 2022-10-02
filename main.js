@@ -55,8 +55,6 @@ window.onload = function () {
                 game.addObject(classedObj, classedObj.z);
             });
         }
-
-        requestAnimationFrame(animate);
     }
 
     function saveState() {
@@ -86,6 +84,8 @@ window.onload = function () {
     }
 
     window.addEventListener("resize", resize);
-
-    startGame();
+    
+    requestAnimationFrame(animate);
+    
+    setTimeout(startGame, 0);
 }

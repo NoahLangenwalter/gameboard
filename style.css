@@ -230,7 +230,7 @@ body {
     /* display: flex;
     flex-direction: column; */
     margin-bottom: 10px;
-    transition: left .2s ease-out, bottom .2s ease-out, height .2s ease-out;
+    transition: left .1s ease-out, bottom .1s ease-out, height .1s ease-out;
     z-index: 2;
     height: 46;
     bottom: calc(-46px * 5 + -10px * 3.5);
